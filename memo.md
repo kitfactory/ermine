@@ -56,3 +56,5 @@ setuptools.setup(
 $ pip install git+file:///home/momokan/python/libhollow -t lib
 
 ```
+
+上記の解説ではeasy_installを使用していますが、pip install Sphinxや、Anaconda/Minicondaを使っていればconda install Sphinxでも導入可能です。
