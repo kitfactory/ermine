@@ -1,6 +1,6 @@
 from types import List
 import tensorflow as tf
-from base.ermine import ErmineUnit, OptionInfo, OptionDirection, Bucket, LogUtil
+from ermine import ErmineUnit, OptionInfo, OptionDirection, Bucket, LogUtil
 
 
 class DirectoryClassDataset(ErmineUnit):
