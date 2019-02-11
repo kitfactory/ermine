@@ -2,10 +2,9 @@ from typing import List, Dict
 from enum import Enum
 from abc import ABCMeta, abstractmethod
 
+import logging
 import json
 import tensorflow as tf
-
-import logging
 
 
 class LogLevel(Enum):
@@ -44,19 +43,9 @@ class OptionDirection(Enum):
     OTHER = 3
 
 
-class KitPlayException(Exception):
+class ErmineException(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-'''
-{
-    name: 'hoge',
-    default: ['x']
-    type: 1,
-    direction: 1
-}
-'''
 
 
 class OptionInfo():
@@ -97,30 +86,12 @@ class OptionInfo():
         return ''
 
 
-'''
-    def __init__(self, name:str, direction:OptionDirection, values:List[str] ):
-        super.__init__()
-        self.name = name
-        self.direction = direction
-        self.values = values
-
-
-class OptionBuilder():
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    
-    def build_options(self, json:str)->List[KitPart]:
-        return []
-
-'''
-
-
 class Bucket(Dict):
     def __init__(self):
         super().__init__()
 
 
-class KitPart(metaclass=ABCMeta):
+class ErmineUnit(metaclass=ABCMeta):
     def __init__(self):
         super().__init__()
         self.option_infos: List[OptionInfo] = self.prepare_option_infos()
@@ -155,15 +126,15 @@ class KitPart(metaclass=ABCMeta):
         pass
 
 
-class KitPlayer():
+class ErminePlayer():
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.blocks: List[KitPart] = []
+        self.blocks: List[ErmineUnit] = []
 
     def set_playlist(self, json_str: str = None, json_file: str = None):
         try:
             if json_str is None and json_file is None:
-                raise KitPlayException(
+                raise ErmineException(
                     'No specified playlist. KitPlayer needs a playlist to play.'
                 )
 
@@ -183,7 +154,7 @@ class KitPlayer():
                 self.blocks.append(instance)
 
         except Exception as exception:
-            raise KitPlayException(exception)
+            raise ErmineException(exception)
 
     def play(self, bucket: Bucket = None) -> Bucket:
         if bucket is None:
@@ -192,17 +163,17 @@ class KitPlayer():
             for b in self.blocks:
                 b.play(bucket)
         except Exception as exception:
-            raise KitPlayException(exception)
+            raise ErmineException(exception)
 
         return bucket
 
 
-class DatasetLabelStats(KitPart):
+class DatasetLabelStats(ErmineUnit):
     def __init__(self):
         super().__init__()
 
 
-class DatasetImageStats(KitPart):
+class DatasetImageStats(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -234,7 +205,7 @@ class WebService():
 '''
 
 
-class FooPart(KitPart):
+class FooPart(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -252,7 +223,7 @@ class FooPart(KitPart):
         LogUtil.debug('Set hello message to {}'.format(k))
 
 
-class BarPart(KitPart):
+class BarPart(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -267,7 +238,7 @@ class BarPart(KitPart):
         LogUtil.debug('Get message is {}'.format(bucket[k]))
 
 
-class JsonInitialParameter(KitPart):
+class JsonInitialParameter(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -286,123 +257,9 @@ class JsonInitialParameter(KitPart):
                 d = json.load(f, encoding='utf-8')
 
 
-class DirectoryClassDataset(KitPart):
-    def __init__(self):
-        super().__init__()
-
-    @classmethod
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        datadir = OptionInfo(
-            name='DataDir', direction=OptionDirection.OTHER, values=['data'])
-        classes = OptionInfo(
-            name='Classes', direction=OptionDirection.OTHER, values=['2'])
-        dest = OptionInfo(
-            name='DestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        return [datadir, classes, dest]
-
-    def play(self, bucket: Bucket):
-        pass
 
 
-class CsvDataset(KitPart):
-    def __init__(self):
-        super().__init__()
-
-    @classmethod
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        datadir = OptionInfo(
-            name='DataDir',
-            direction=OptionDirection.OTHER,
-            values=['data.csv'])
-        image = OptionInfo(
-            name='Image', direction=OptionDirection.OTHER, values=['image'])
-        label = OptionInfo(
-            name='Label', direction=OptionDirection.OTHER, values=['label'])
-        classes = OptionInfo(
-            name='Classes', direction=OptionDirection.OTHER, values=['2'])
-        dest = OptionInfo(
-            name='DestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        return [datadir, image, label, classes, dest]
-
-    def play(self, bucket: Bucket):
-        pass
-
-
-class MnistTrainDataset(KitPart):
-    def __init__(self):
-        super().__init__()
-
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def play(self, bucket: Bucket):
-        (x_train, y_train), (x_test,
-                             y_test) = tf.keras.datasets.mnist.load_data()
-        x_train = x_train / 255.0
-        x_test = x_test / 255.0
-        x_train_dataset = tf.data.Dataset.from_tensor_slices(x_train)
-        y_train_dataset = tf.data.Dataset.from_tensor_slices(y_train)
-        train = x_train_dataset.zip(y_train_dataset)
-        bucket[self.options['TrainDataset']] = train
-        x_test_dataset = tf.data.Dataset.from_tensor_slices(x_test)
-        y_test_dataset = tf.data.Dataset.from_tensor_slices(y_test)
-        test = x_test_dataset.zip(y_test_dataset)
-        bucket[self.options['TestDataset']] = test
-        print('mnist train dataset load to {}'.format(
-            self.options['TrainDataset']))
-        print('mnist test dataset load to {}'.format(
-            self.options['TestDataset']))
-
-
-class FashionMnistTrainDataset(KitPart):
-    def __init__(self):
-        super().__init__()
-
-    @classmethod
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def play(self, bucket: Bucket):
-        (x_train,
-         y_train), (x_test,
-                    y_test) = tf.keras.datasets.fashion_minist.load_data()
-        x_train = x_train / 255.0
-        x_test = x_test / 255.0
-        x_train_dataset = tf.data.Dataset.from_tensor_slices(x_train)
-        y_train_dataset = tf.data.Dataset.from_tensor_slices(y_train)
-        train = x_train_dataset.zip(y_train_dataset)
-        bucket[self.options['TrainDataset']] = train
-        x_test_dataset = tf.data.Dataset.from_tensor_slices(x_test)
-        y_test_dataset = tf.data.Dataset.from_tensor_slices(y_test)
-        test = x_test_dataset.zip(y_test_dataset)
-        bucket[self.options['TestDataset']] = test
-        LogUtil.debug('fashion mnist train dataset load to {}'.format(
-            self.options['TrainDataset']))
-        LogUtil.debug('fashion mnist test dataset load to {}'.format(
-            self.options['TestDataset']))
-
-
-class ShuffleDataset(KitPart):
+class ShuffleDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -440,7 +297,7 @@ class ShuffleDataset(KitPart):
         bucket[self.options['DestDataset']] = dataset
 
 
-class DatasetAugument(KitPart):
+class DatasetAugument(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -457,7 +314,7 @@ class DatasetAugument(KitPart):
         return [dataset]
 
 
-class DatasetBooster(KitPart):
+class DatasetBooster(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -465,7 +322,7 @@ class DatasetBooster(KitPart):
 if __name__ == '__main__':
     print(tf.__version__)
     LogUtil.init()
-    player = KitPlayer()
+    player = ErminePlayer()
     player.set_playlist(json_file='./test_play.json')
     player.play()
 '''
