@@ -1,10 +1,10 @@
 # Ermine
 
-Super Easy Machine Learning Tool for TensorFlow
+Super Easy Machine Learning Tool using TensorFlow.
 
 ## 1. What is Ermine?
 
-Ermine is executor of the machine learning playlist which is compose of components.
+Ermine is executor of the machine learning program which is composed from units.
 
 You can edit the playlist with excellent GUI. You can edit it like the block play.
 
@@ -15,18 +15,36 @@ You can edit the playlist with excellent GUI. You can edit it like the block pla
 
 ```
 
-## 3.Example
+## 3.Short Example (Mnist)
 
 At first, you have to run the server.
 
 ```
-> ermine-server &
+> ermine-web &
 
 ```
 
 Open http://localhost:7007/  with your browser app.
 
-### 3.1. Training.
+
+Add mnist dataset.
+
+
+
+Add CNN model.
+
+
+
+Add Train Settings.
+
+
+
+And execute !!
+
+
+
+
+## 4. Training.
 
 Press trainig tab.
 
@@ -54,10 +72,9 @@ Machine learning trainig process will have units bellow.
 |Evaluation Output Unit|outputs result of the inferences in the specified format.|
 
 
-## 4. Adding a new Ermine unit.
+## 5. Adding a new Ermine unit.
 
-### 4.1. Create new unit.
+### 5.1. Create new unit.
 
-
-### 4.2. Add the new unit to Ermine.
+### 5.2. Add the new unit to Ermine.
 

@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+# Flask などの必要なライブラリをインポートする
+from flask import Flask, jsonify
+# , render_template, request, redirect, url_for
+
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def index():
+    pass
+
+
+@app.route('/info/<unit>')
+def info(unit):
+    pass
+
+
+@app.route('/units')
+def units():
+    result = {
+        "Result": {
+            "Greeting": "Hello"
+        }
+    }
+    return jsonify(result)
+
+
+@app.route('/exec')
+def execute():
+    pass
+
+
+if __name__ == '__main__':
+    app.debug = True
+    app.run(port=7007)

@@ -5,7 +5,7 @@ setuptools.setup(
     version="0.1",
     author="kitfactory",
     author_email="kitfactory@gmail.com",
-    description="own python package",
+    description="python package",
     long_description="ermine ...",
     long_description_content_type="text/markdown",
     url="https://github.com/kitfactory/ermine.git",
@@ -14,5 +14,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6.0",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-    ]
+    ],
+    scripts=['bin/ermine-web']
 )
