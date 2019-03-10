@@ -145,3 +145,11 @@ def hello_world(name):
 if __name__ == '__main__':
     app.debug = True # デバッグモード有効化
     app.run(host='0.0.0.0') # どこからでもアクセス可能に
+
+
+
+
+pytest
+
+@pytest.mark.xxxx
+

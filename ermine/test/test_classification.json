@@ -1,0 +1,28 @@
+{
+    "units":[
+        {
+            "name": "ermine.classification.dataset.MnistDataset",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.classification.model.SimpleCNN",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.classification.model.ModelCompile",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.classification.model.ModelTrain",
+            "options":{
+                "message_key":"Message"
+            }
+        }
+   ]
+}

@@ -1,0 +1,10 @@
+{
+    "units":[
+        {
+            "name": "ermine.test.FooUnit",
+            "options":{
+                "message_key":"Message"
+            }
+        }
+   ]
+}

@@ -15,5 +15,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    scripts=['bin/ermine-web']
+    scripts=['bin/ermine-web','bin/ermine-runner']
 )

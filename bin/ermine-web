@@ -4,8 +4,10 @@
 from flask import Flask, jsonify
 # , render_template, request, redirect, url_for
 
+from ermine.web import Web
 
 app = Flask(__name__)
+web = Web()
 
 
 @app.route('/')
@@ -15,22 +17,22 @@ def index():
 
 @app.route('/info/<unit>')
 def info(unit):
-    pass
+    return jsonify(web.info(unit))
 
 
 @app.route('/units')
 def units():
-    result = {
-        "Result": {
-            "Greeting": "Hello"
-        }
-    }
-    return jsonify(result)
+    return jsonify(web.units())
 
 
 @app.route('/exec')
 def execute():
     pass
+
+
+@app.route('/progress')
+def progress():
+    return jsonify(web.progress())
 
 
 if __name__ == '__main__':
