@@ -153,3 +153,11 @@ pytest
 
 @pytest.mark.xxxx
 
+def reducer(array_val, label):
+    c = tf.cast(label, tf.int32)
+    x = tf.gather(array_val,c)
+    x = x + 1
+    array_val = tf.tensor_scatter_update(array_val,[[c]],[x])
+    return array_val
+
+array_val = train_dataset.reduce(array_val, reducer)
