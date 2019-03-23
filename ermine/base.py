@@ -178,7 +178,7 @@ class ErmineRunner():
                 )
 
             if json_file is not None:
-                with tf.gfile.GFile(json_file, 'r') as f:
+                with tf.io.gfile.GFile(json_file, 'r') as f:
                     json_str = f.read()
 
             if json_str is not None:
@@ -399,13 +399,25 @@ class WooUnit(ErmineUnit):
         print("FooUnit.run()")
 
 
+import sys
+
+
+def main():
+    print('Welcome to Ermine!!')
+    argv = sys.argv
+    argc = len(argv)
+
+    if argc != 2:
+        print('usage: ermine-runner setting_file.json')
+        exit()
+
+    runner = ErmineRunner()
+    runner.set_config(json_file=argv[1])
+    runner.run()
 
 if __name__ == '__main__':
-    print(tf.__version__)
-    LogUtil.init()
-    player = ErmineRunner()
-    player.set_playlist(json_file='./test_play.json')
-    player.run()
+    main()
+
 '''
 * GUIで設定する。
 * BlockPlay

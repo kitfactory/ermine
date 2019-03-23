@@ -1,5 +1,6 @@
 from typing import List
 import tensorflow as tf
+import numpy as np
 from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
 # , LogUtil
 
@@ -68,9 +69,11 @@ class MnistDataset(ErmineUnit):
     def run(self, bucket: Bucket):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
         x_train = x_train/255.0
+        x_train = x_train.astype(np.float32)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
         bucket[self.options['TrainDataset']] = dataset
         x_test = x_test/255.0
+        x_train = x_test.astype(np.float32)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
         bucket[self.options['TestDataset']] = testset
 

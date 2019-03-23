@@ -15,7 +15,7 @@
         {
             "name": "ermine.classification.model.ModelCompile",
             "options":{
-                "message_key":"Message"
+                "EarlyStopping": "False"
             }
         },
         {
@@ -24,5 +24,11 @@
                 "message_key":"Message"
             }
         }
-   ]
+   ],
+
+   "globals":{
+        "Batch": "100",
+        "Class": "10"
+    }
+
 }

@@ -4,7 +4,6 @@ from os.path import expanduser, exists
 from .base import ErmineUnit
 from .base import OptionInfo
 
-
 class Web():
     def __init__(self):
         self.home = expanduser("~")

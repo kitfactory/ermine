@@ -1,4 +1,6 @@
 import setuptools
+import os
+
 
 setuptools.setup(
     name="ermine",
@@ -13,7 +15,11 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3.6.0",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+         "Operating System :: OS Independent",
     ],
-    scripts=['bin/ermine-web','bin/ermine-runner']
+    entry_points = {
+        'console_scripts':[
+            'ermine-runner = ermine.base:main'
+        ]
+    }
 )

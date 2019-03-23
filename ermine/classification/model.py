@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 from typing import List
 from ermine import ErmineUnit, OptionInfo, OptionDirection, Bucket
@@ -117,10 +118,13 @@ class ModelTrain(ErmineUnit):
             direction=OptionDirection.PARAMETER,
             values=['True', 'False'])
 
+
+        logdir: str = "." + os.path.sep+ "log"
+
         tensorboard_dir = OptionInfo(
             name='TensorBoard.LogDir',
             direction=OptionDirection.PARAMETER,
-            values=['./log'])
+            values=[logdir])
 
         early_stopping = OptionInfo(
             name='EarlyStopping',
@@ -153,26 +157,54 @@ class ModelTrain(ErmineUnit):
         return dataset.make_one_shot_iterator().get_next()
  
     def run(self, bucket: Bucket):
+
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        sess = tf.compat.v1.Session(config=config)
+        sess.as_default()
+
+
         model: tf.keras.Model = bucket[self.options['Model']]
         dataset: tf.data.Dataset = bucket[self.options['Dataset']]
+
+
+        
+        def short_map(image, label):
+            x = tf.reshape(image, (28,28,1))
+            y = tf.one_hot(tf.cast(label, tf.uint8), 10)
+            return (x, y)
+
+
+        dataset = dataset.map(short_map).batch(100).repeat()
+        print(dataset)
+        model.fit(dataset, epochs=10, steps_per_epoch=600)
+
+        print("End!!")
+        exit()
+
+
+
         self.cls = int(self.options['Class'])
 
         def map_fn(image, label):
             '''Preprocess raw data to trainable input. '''
             x = tf.reshape(tf.cast(image, tf.float32), (28, 28, 1))
             y = tf.one_hot(tf.cast(label, tf.uint8), 10)
-            # y = tf.reshape(y, (1, 10))
-            return ({'input_1': x}, y)
+            y = tf.reshape(y, (1, 10))
+            # return ({'input_1': x}, y)
+            return (x, y)
 
-        dataset = dataset.map(map_fn).batch(50).repeat().prefetch(tf.contrib.data.AUTOTUNE)
-        # trainset = dataset.take(54000).skip(6000)
-        # valset = dataset.skip(54000).take(6000)
+        dataset = dataset.map(map_fn)  #.batch(100).repeat() #.prefetch(1000)
+        print(dataset)
+        trainset = dataset.take(54000).skip(6000)
+        valset = dataset.skip(54000).take(6000)
 
         callbacks = []
         if bool(self.options['TensorBoard']):
             log_dir = self.options['TensorBoard.LogDir']
-            tf_cb = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0)
+            tf_cb = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0, write_graph=False, update_freq='epoch')
             callbacks.append(tf_cb)
+        
         if bool(self.options['EarlyStopping']):
             patience = int(self.options['EarlyStopping.Patience'])
             monitor = self.options['EarlyStopping.Monitor']
@@ -181,13 +213,13 @@ class ModelTrain(ErmineUnit):
 
 
 #       dataset = dataset.map(self.__one_hot)
-        # model.fit(trainset, validation_data=valset, callbacks=callbacks, epochs=10, steps_per_epoch=1080, validation_steps=120)
+        model.fit(trainset, validation_data=valset, callbacks=callbacks, epochs=10, steps_per_epoch=1080, validation_steps=120)
 
         # KerasモデルをEstimatorに変換する
-        print(model.input_names)
-        print(model.output_names)
-        est: tf.estimator.Estimator = tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='./estimator')
-        est.train(input_fn=lambda: self.__input_fn(dataset), steps=120)
+        # print(model.input_names)
+        # print(model.output_names)
+        # est: tf.estimator.Estimator = tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='./estimator')
+        # est.train(input_fn=lambda: self.__input_fn(dataset), steps=120)
 
 
 '''

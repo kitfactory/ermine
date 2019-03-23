@@ -86,6 +86,21 @@ setup(
 
 
 
+## EntryPoint
+
+setup(
+    # other arguments here...
+    entry_points={
+        'console_scripts': [
+            'foo = my_package.some_module:main_func',
+            'bar = other_module:some_func',
+        ]
+    }
+)
+
+
+
+
 
 
 flask
