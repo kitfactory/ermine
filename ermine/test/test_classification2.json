@@ -1,15 +1,15 @@
 {
     "units":[
         {
-            "name": "ermine.classification.dataset.MnistDataset",
+            "name": "ermine.classification.dataset.Cifar10Dataset",
             "options":{
-                "message_key":"Message"
             }
         },
         {
             "name": "ermine.classification.model.SimpleCNN",
             "options":{
-                "message_key":"Message"
+                "Size": "32",
+                "Channel" : "3"
             }
         },
         {
@@ -21,7 +21,8 @@
             "name": "ermine.classification.train.ModelTrain",
             "options":{
                 "TensorBoard": "True",
-                "BatchSize" : "200"
+                "BatchSize" : "25",
+                "NumberOfData" : "50000"
             }
         }
    ],

@@ -12,8 +12,17 @@ class FooUnit(ErmineUnit):
             name='message_key',
             direction=OptionDirection.OUTPUT,
             values=['Message'])
-        return [o]
+        g = OptionInfo(
+            name = 'task',
+            direction=OptionDirection.INPUT,
+            values=['$GLOBAL.Task$'])
+        return [o,g]
 
     def run(self, bucket: Bucket):
+        print('foo unit options ', self.options)
         bucket[self.options['message_key']] = 'HelloWorld'
+        print( 'option[task]' , self.options['task'])
+        bucket['task'] = self.options['task']
         print("FooUnit.run()")
+        print('FooUnit.task',self.options['task'])
+

@@ -205,3 +205,10 @@ with tf.Session() as sess:
             print('Got !!' , sess.run(next))
     except tf.errors.OutOfRangeError as error:
         print('end')
+
+
+ 190010467
+ 190010443
+ 190010445
+ 190010449
+ 
