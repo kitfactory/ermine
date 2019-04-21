@@ -8,6 +8,9 @@ import os
 import json
 import tensorflow as tf
 
+
+
+
 class OptionDirection(Enum):
     INPUT = 1
     OUTPUT = 2

@@ -86,21 +86,6 @@ setup(
 
 
 
-## EntryPoint
-
-setup(
-    # other arguments here...
-    entry_points={
-        'console_scripts': [
-            'foo = my_package.some_module:main_func',
-            'bar = other_module:some_func',
-        ]
-    }
-)
-
-
-
-
 
 
 flask
@@ -168,14 +153,15 @@ pytest
 
 @pytest.mark.xxxx
 
-def reducer(array_val, label):
+def reducer(array_val, la_bel):
     c = tf.cast(label, tf.int32)
-    x = tf.gather(array_val,c) # gather
+    x = tf.gather(array_val,c)
     x = x + 1
-    array_val = tf.tensor_scatter_update(array_val,[[c]],[x]) # scatter
+    array_val = tf.tensor_scatter_update(array_val,[[c]],[x])
     return array_val
 
 array_val = train_dataset.reduce(array_val, reducer)
+<<<<<<< HEAD
 
 
 import tensorflow as tf
@@ -212,3 +198,5 @@ with tf.Session() as sess:
  190010445
  190010449
  
+=======
+>>>>>>> e5ac523ad93226b384a05a1257124502774dc217
