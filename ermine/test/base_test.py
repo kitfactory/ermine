@@ -2,6 +2,7 @@
 import os
 import shutil
 import sys
+import tensorflow as tf
 # from os.path import expanduser
 
 
@@ -24,13 +25,16 @@ def test_sequencer():
     if os.path.exists(path):
         os.remove(path)
     seq = Sequence.get_sequcene()
-    assert seq == 0
-
-    seq = Sequence.get_sequcene()
+    print('new sequence ', seq)
     assert seq == 1
 
     seq = Sequence.get_sequcene()
+    print('new sequence ', seq)
     assert seq == 2
+
+    seq = Sequence.get_sequcene()
+    print('new sequence ', seq)
+    assert seq == 3
 
 
 def test_run():
@@ -40,13 +44,13 @@ def test_run():
     assert bucket['Message'] == 'HelloWorld'
 
 
-def test_overwrite():
-    runner: ErmineRunner = ErmineRunner()
-    runner.set_config(json_file='ermine/test/test_run.json')
-    new_opt = {'Message': 'OverwriteKey'}
-    runner.overwrite_units_block_config(new_opt)
-    bucket: Bucket = runner.run()
-    assert bucket['OverwriteKey'] == 'HelloWorld'
+# def test_overwrite():
+#     runner: ErmineRunner = ErmineRunner()
+#     runner.set_config(json_file='ermine/test/test_run.json')
+#     new_opt = {'Message': 'OverwriteKey'}
+#     runner.overwrite_units_block_config(new_opt)
+#     bucket: Bucket = runner.run()
+#     assert bucket['OverwriteKey'] == 'HelloWorld'
 
 
 def test_global():
@@ -54,6 +58,7 @@ def test_global():
     runner.set_config(json_file='ermine/test/test_global.json')
     bucket: Bucket = runner.run()
     assert bucket['Message'] == 'HelloWorld'
+    assert int(bucket['task'])  >= 0
 
 # def test_classification():
 #    runner: ErmineRunner = ErmineRunner()

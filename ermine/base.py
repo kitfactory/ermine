@@ -9,6 +9,8 @@ import json
 import tensorflow as tf
 
 
+
+
 class OptionDirection(Enum):
     INPUT = 1
     OUTPUT = 2
@@ -91,9 +93,11 @@ class ErmineUnit(metaclass=ABCMeta):
             d[name] = value
         return d
 
-    def set_options(self, options: Dict[str, str]):
+    def set_options(self, options: Dict[str, str], global_opt: Dict[str, str]):
         for k in options:
             self.options[k] = options[k]
+        self.globals = global_opt
+        print('globlas option of unit', self.globals)
 
     @abstractmethod
     def run(self, bucket: Bucket):
@@ -150,8 +154,10 @@ class ErmineRunner():
         self.web = web
   
     def __stanby_execute(self):
+        print('stanby...')
         try:
             unit_list = self.config['units']
+            global_opt = self.config['globals']
 
             for block_config in unit_list:
                 name = block_config['name']
@@ -161,7 +167,7 @@ class ErmineRunner():
                 class_def = getattr(mod, name[1])
                 instance = class_def()
                 # block_config['options']['GLOBAL'] = global_option
-                instance.set_options(block_config['options'])
+                instance.set_options(block_config['options'], global_opt)
                 self.units.append(instance)
                 self.status.append(ErmineState(name))
         except Exception as exception:
@@ -171,7 +177,9 @@ class ErmineRunner():
         return self.config
 
     def set_config(self, json_str: str = None, json_file: str = None, update_str: bool = True):
+        print('set config...')
         try:
+
             if json_str is None and json_file is None:
                 raise ErmineException(
                     'No specified configuration.'
@@ -185,25 +193,33 @@ class ErmineRunner():
                 if update_str:
                     self.json_str = json_str
                 self.config = json.loads(json_str, encoding='utf-8')
+                        
+            if 'globals' not in self.config:
+                self.config['globals'] = {}
 
-            if 'globals' in self.config and update_str:
-                global_options = self.config['globals']
-                global_dict: Dict[str, str] = {}
-                for k in global_options:
-                    global_dict['$GLOBAL.'+k+'$'] = global_options[k]
-                self.overwrite_units_block_config(global_dict)
+            seqence = Sequence.get_sequcene()
+            self.config['globals']['TASK'] = str(seqence)
+            seq_dir = HomeFile.get_seq_dir(seqence)
+            if os.path.exists(seq_dir) is False:
+                os.makedirs(seq_dir)
+            self.config['globals']['TASKDIR'] = seq_dir
+            self.config['globals']['HOMEDIR'] = HomeFile.get_home_dir()
+            json_str = json.dumps(self.config)
+
+            global_dict: Dict[str, str] = {}
+            global_options = self.config['globals']
+
+            for k in global_options:
+                global_dict['$GLOBAL.'+k+'$'] = global_options[k]
+            
+            for k in global_dict:
+                json_str = json_str.replace(k, global_dict[k])
+            
+            print( json_str )
+            self.config = json.loads(json_str, encoding='utf-8')
 
         except Exception as exception:
             raise ErmineException(exception)
-
-    def overwrite_units_block_config(self, overwrite: Dict[str, str]):
-        units = self.config['units']
-        s = json.dumps(units)
-        for k in overwrite:
-            s = s.replace(k, overwrite[k])
-        new_options = json.loads(s)
-        self.config['units'] = new_options
-        self.set_config(json_str=json.dumps(self.config), update_str=False)
 
     def run(self, bucket: Bucket = None) -> Bucket:
         self.__stanby_execute()
@@ -285,12 +301,12 @@ class HomeFile():
             f.write(conetents)
     
     @staticmethod
-    def get_seq_dir(seq) -> str:
-        seq_dir: str = HomeFile.get_home_dir() + os.path.sep + 'task' + os.path.sep + seq
+    def get_seq_dir(seq: int) -> str:
+        seq_dir: str = HomeFile.get_home_dir() + os.path.sep + 'task' + os.path.sep + str(seq)
         return seq_dir
 
     @staticmethod
-    def make_seq_dir(seq):
+    def make_seq_dir(seq: int):
         os.makedirs(HomeFile.get_seq_dir(seq))
 
 
@@ -301,18 +317,19 @@ class Sequence():
     def __init__(self):
         super().__init__()
         val: str = HomeFile.load_home_file(Sequence.SEQUENCE_FILE)
-        self.seqence = 0
+        self.sequence = 0
         if val is not None:
-            self.sequence = int(val)
+            self.sequence = int(val[0])
+            print('Sequence.init',self.sequence)
+            
 
     @staticmethod
     def get_sequcene() -> int:
         if Sequence.instance is None:
-            Sequence.instance = Sequence()
-        else:
-            Sequence.instance.seqence = Sequence.instance.seqence + 1
-            HomeFile.save_home_file(Sequence.SEQUENCE_FILE, str(Sequence.instance.seqence))
-        return Sequence.instance.seqence
+            Sequence.instance = Sequence() # loadするだけ
+        Sequence.instance.sequence = Sequence.instance.sequence + 1
+        HomeFile.save_home_file(Sequence.SEQUENCE_FILE, str(Sequence.instance.sequence))
+        return Sequence.instance.sequence
 
 
 class JsonInitialParameter(ErmineUnit):
@@ -440,9 +457,12 @@ if __name__ == '__main__':
 * 学習を中断したい。(プロセスの実行）
 * 学習履歴を列挙したい。
 
-* ModelのEstimator化
+* ModelのEstimator化 -> 不要。
+
 * Tensorboardのログの位置
-    
+    -　タスクごとに割り振る
+    - パラメータ変えて実行する場合の
+        
 
 * 評価ブロック
 * 評価フロー : 
@@ -461,6 +481,22 @@ ON/OFFの下に記載のこと。
 * 共通の変数を使用する。
 * global->$Global.**$
 
+* 特別編数
+$GLOBAL.TASK$ タスク番号
+$GLOBAL.TASKDIR$ タスクディレクトリ
+$GLOBAL.HOMEDIR$ ホームディレクトリ
+
+* 準特別変数
+＄GLOBAL.HOMDIR$/dataset/dataset名
+
+---
+モデルの記録先
+
+$GLOBAL.TASKDIR$/xxx
+
+---
+
+
 
 
 * 生成した値で動かす。
@@ -470,8 +506,6 @@ ON/OFFの下に記載のこと。
     - タスク結果が見られる。
     - 結果を見るには？
         - 検証フロー
-
-
 
 
 Estimator API

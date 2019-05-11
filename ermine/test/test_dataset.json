@@ -1,0 +1,14 @@
+{
+    "units":[
+        {
+            "name": "ermine.classification.dataset.DirectoryClassDataset",
+            "options":{
+                "DataDir": "C:\\Users\\kitad\\.ermine\\dataset\\rock_paper_scissors\\rps",
+                "Ext": ".png"
+            }
+        }
+   ],
+
+   "globals":{
+   }
+}

@@ -3,7 +3,8 @@
         {
             "name": "ermine.test.FooUnit",
             "options":{
-                "message_key":"$GLOBAL.MessageKey$"
+                "message_key":"$GLOBAL.MessageKey$",
+                "task": "$GLOBAL.TASK$"
             }
         }
    ],
