@@ -69,6 +69,9 @@ Machine learning trainig process will have units bellow.
 
 Now prinitng...
 
+
+
+
 # 5. Distribute Training.
 
 Now prinitng...
