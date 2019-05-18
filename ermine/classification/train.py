@@ -35,7 +35,7 @@ class ModelCompile(ErmineUnit):
         if self.options['Optimizer'] == 'SGD':
             optimizer = tf.keras.optimizers.SGD(lr=lr)
         else:
-            optimizer = tf.keras.optimizers.Adam(lr=lr)
+            optimizer = tf.keras.optimizers.Adam()
         model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
         bucket[self.options['DestModel']] = model
 
@@ -98,7 +98,8 @@ class ModelTrain(ErmineUnit):
         check_point_file_path = OptionInfo(
             name='ModelCheckpoint.FilePath',
             direction=OptionDirection.PARAMETER,
-            values=['weights-{epoch:02d}-{val_loss:.2f}.hdf5'])
+            values=['weights.hdf5'])
+            # values=['weights-{epoch:02d}-{val_loss:.2f}.hdf5'])
 
         clsses = OptionInfo(
             name='Class',
@@ -135,8 +136,8 @@ class ModelTrain(ErmineUnit):
  
     def run(self, bucket: Bucket):
 
-        sess = tf.Session()
-        sess.as_default()
+        # sess = tf.Session()
+        # sess.as_default()
 
         model: tf.keras.Model = bucket[self.options['Model']]
         dataset: tf.data.Dataset = bucket[self.options['Dataset']]
@@ -149,7 +150,6 @@ class ModelTrain(ErmineUnit):
 
         def map_fn(image, label):
             '''Preprocess raw data to trainable input. '''
-            #  x = tf.reshape(tf.cast(image, tf.float32), (28, 28, 1))
             y = tf.one_hot(tf.cast(label, tf.uint8), self.clsses)
             return (image, y)
 
@@ -159,9 +159,10 @@ class ModelTrain(ErmineUnit):
         validation_steps = int(val_data_num/batch_size)
 
         dataset = dataset.map(map_fn)
-        trainset = dataset.take(train_data_num).skip(val_data_num).batch(batch_size).repeat()
-        valset = dataset.skip(train_data_num).take(val_data_num).batch(batch_size).repeat()
+        trainset = dataset.take(train_data_num).skip(val_data_num).repeat().batch(batch_size)
+        valset = dataset.skip(train_data_num).take(val_data_num).repeat().batch(batch_size)
 
+        print("BatchSize", batch_size)
         print("trainset", trainset, "data num" , train_data_num)
         print("valset", valset, "val data num", val_data_num)
 
@@ -187,7 +188,7 @@ class ModelTrain(ErmineUnit):
             weigths = bool(self.options['ModelCheckpoint.SaveWeightsOnly'])
             filepath = self.globals['TASKDIR'] + os.path.sep + self.options['TraialName'] +  os.path.sep + self.options['ModelCheckpoint.FilePath']
 
-            sv_cb = tf.keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_loss', save_best_only=best, save_weights_only=weigths)
+            sv_cb = tf.keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_loss', save_best_only=best, save_weights_only=weigths, verbose=1)
             callbacks.append(sv_cb)
 
         model.fit(trainset, validation_data=valset, callbacks=callbacks, epochs=max_epoch, steps_per_epoch=steps_per_epoch, validation_steps=validation_steps)

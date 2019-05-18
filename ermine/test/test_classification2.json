@@ -6,23 +6,30 @@
             }
         },
         {
+            "name": "ermine.utils.image.ImageResize",
+            "options":{
+            }
+        },
+        {
             "name": "ermine.classification.model.SimpleCNN",
             "options":{
-                "Size": "32",
+                "Size": "224",
                 "Channel" : "3"
             }
         },
         {
             "name": "ermine.classification.train.ModelCompile",
             "options":{
+                "Optimizer": "Adam"
             }
         },
         {
             "name": "ermine.classification.train.ModelTrain",
             "options":{
                 "TensorBoard": "True",
-                "BatchSize" : "25",
-                "NumberOfData" : "50000"
+                "BatchSize" : "50",
+                "NumberOfData" : "50000",
+                "MaxEpoch": "20"
             }
         }
    ],

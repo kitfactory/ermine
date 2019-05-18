@@ -7,6 +7,7 @@ from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
 # , LogUtil
 
 
+
 class DirectoryClassDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
@@ -207,17 +208,18 @@ class Cifar10Dataset(ErmineUnit):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
         x_train = x_train/255.0
         x_train = x_train.astype(np.float32)
-        print("x_train.len =" , x_train.shape[0])
+        print("x_train.shape =" , x_train.shape)
+        print("y_train.shape =" , y_train.shape)
         x_train = x_train.reshape(x_train.shape[0],32,32,3)
+        y_train = y_train.reshape(y_train.shape[0])
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
         bucket[self.options['TrainDataset']] = dataset
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],32,32, 3)
+        y_test = y_test.reshape(y_test.shape[0])
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
         bucket[self.options['TestDataset']] = testset
-
-
 
 
 class TFDSDataset(ErmineUnit):

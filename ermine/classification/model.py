@@ -31,32 +31,32 @@ class SimpleCNN(ErmineUnit):
     def run(self, bucket: Bucket):
         size = int(self.options['Size'])
         channel = int(self.options['Channel'])
-        cls = int(self.options['Class'])
+        classes = int(self.options['Class'])
 
         kernel_size = (3, 3)
         max_pool_size = (2, 2)
         print("Input Layer shape = (", size, "," ,size ,",", channel, ")" )
         input_layer = tf.keras.Input(shape=(size, size, channel, )) # batchサイズで受け取り
 
-        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(input_layer)
-        cnn = tf.keras.layers.Dropout(0.1)(cnn)
-        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(cnn)
-        cnn = tf.keras.layers.Dropout(0.1)(cnn)
-#        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(cnn)
-#        cnn = tf.keras.layers.Dropout(0.1)(cnn)
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu', data_format='channels_last')(input_layer)
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu')(cnn)
         cnn = tf.keras.layers.MaxPooling2D(pool_size=max_pool_size, strides=(2, 2))(cnn)
+        cnn = tf.keras.layers.Dropout(0.25)(cnn)
 
-#        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(cnn)
-#        cnn = tf.keras.layers.Dropout(0.1)(cnn)
-#        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(cnn)
-#        cnn = tf.keras.layers.Dropout(0.1)(cnn)
-#        cnn = tf.keras.layers.Conv2D(64, kernel_size, padding='same', activation='relu')(cnn)
-#        cnn = tf.keras.layers.Dropout(0.1)(cnn)
-#        cnn = tf.keras.layers.MaxPooling2D(pool_size=max_pool_size, strides=(2, 2))(cnn)
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu')(cnn)
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu')(cnn)
+        cnn = tf.keras.layers.MaxPooling2D(pool_size=max_pool_size, strides=(2, 2))(cnn)
+        cnn = tf.keras.layers.Dropout(0.1)(cnn)
+
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu')(cnn)
+        cnn = tf.keras.layers.Conv2D(32, kernel_size, padding='same', activation='relu')(cnn)
+        cnn = tf.keras.layers.MaxPooling2D(pool_size=max_pool_size, strides=(2, 2))(cnn)
+        cnn = tf.keras.layers.Dropout(0.1)(cnn)
 
         fc = tf.keras.layers.Flatten()(cnn)
-        fc = tf.keras.layers.Dense(1024, activation='relu')(fc)
-        softmax = tf.keras.layers.Dense(cls, activation='softmax')(fc)
+        fc = tf.keras.layers.Dense(512, activation='relu')(fc)
+        fc = tf.keras.layers.Dropout(0.1)(fc)
+        softmax = tf.keras.layers.Dense(10, activation='softmax')(fc)
         model = tf.keras.Model(inputs=input_layer, outputs=softmax)
         bucket[self.options['Model']] = model
 
