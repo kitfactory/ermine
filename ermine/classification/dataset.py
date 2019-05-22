@@ -8,6 +8,57 @@ from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
 
 
 
+class ImageClassificationDataset(ErmineUnit):
+    def __init__(self):
+        super().__init__()
+    
+    @classmethod
+    def prepare_option_infos(self) -> List[OptionInfo]:
+        train = OptionInfo(
+            name='TrainDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['DATASET'])
+
+        train_size = OptionInfo(
+            name='TrainDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['DATASET_SIZE'])
+        
+        validation = OptionInfo(
+            name='ValidationDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['VALIDATE_DATASET'])
+
+        validation_size = OptionInfo(
+            name='ValidationDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['DATASET_SIZE'])
+
+        test = OptionInfo(
+            name='TestDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['TEST_DATASET'])
+
+        test_size = OptionInfo(
+            name='TestDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['TEST_DATASET_SIZE'])
+
+        return [train, train_size, validation, validation_size, test, test_size]
+
+    @abstractmethod
+    def __load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+        pass
+    
+    def run(self, bucket: Bucket):
+        (train,train_size),(validation,validation_size),(test, test_size) = self.__load_dataset()
+        bucket[self.options['TrainDataset']] = train
+        bucket[self.options['TrainDatasetSize']] = train_size
+        bucket[self.options['ValidationDataset']] = validation
+        bucket[self.options['ValidationDatasetSize']] = validation_size
+        bucket[self.options['TestDataset']] = test
+        bucket[self.options['TestDatasetSize']] = test_size
+
 class DirectoryClassDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
@@ -131,20 +182,9 @@ class CsvClassifyDataset(ErmineUnit):
         pass
 
 
-class MnistDataset(ErmineUnit):
+class MnistDataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
-
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
 
     def run(self, bucket: Bucket):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -152,7 +192,15 @@ class MnistDataset(ErmineUnit):
         x_train = x_train.astype(np.float32)
         x_train = x_train.reshape(x_train.shape[0],28,28,1)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+
+        dataset = dataset.shuffle(60000, seed=10)
+
+
+
         bucket[self.options['TrainDataset']] = dataset
+        bucket[self.options['TrainDatasetSize']] = x_train.shape[0]
+
+        
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
