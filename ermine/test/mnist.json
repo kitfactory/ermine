@@ -1,0 +1,15 @@
+{
+    "units":[
+        {
+            "name": "ermine.classification.dataset.MnistDataset",
+            "options":{
+                "message_key":"$GLOBAL.MessageKey$",
+                "task": "$GLOBAL.TASK$"
+            }
+        }
+   ],
+
+   "globals":{
+        "MessageKey":"Message"
+   }
+}

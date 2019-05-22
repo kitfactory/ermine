@@ -1,12 +1,11 @@
 from typing import List
 import os
 import tensorflow as tf
-import tensorflow_datasets as tfds
+# import tensorflow_datasets as tfds
 import numpy as np
 from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
+from abc import abstractmethod
 # , LogUtil
-
-
 
 class ImageClassificationDataset(ErmineUnit):
     def __init__(self):
@@ -47,11 +46,11 @@ class ImageClassificationDataset(ErmineUnit):
         return [train, train_size, validation, validation_size, test, test_size]
 
     @abstractmethod
-    def __load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
         pass
     
     def run(self, bucket: Bucket):
-        (train,train_size),(validation,validation_size),(test, test_size) = self.__load_dataset()
+        (train,train_size),(validation,validation_size),(test, test_size) = self.load_dataset()
         bucket[self.options['TrainDataset']] = train
         bucket[self.options['TrainDatasetSize']] = train_size
         bucket[self.options['ValidationDataset']] = validation
@@ -59,6 +58,7 @@ class ImageClassificationDataset(ErmineUnit):
         bucket[self.options['TestDataset']] = test
         bucket[self.options['TestDatasetSize']] = test_size
 
+'''
 class DirectoryClassDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
@@ -182,31 +182,31 @@ class CsvClassifyDataset(ErmineUnit):
         pass
 
 
+'''
+
 class MnistDataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
 
-    def run(self, bucket: Bucket):
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
         x_train = x_train/255.0
         x_train = x_train.astype(np.float32)
         x_train = x_train.reshape(x_train.shape[0],28,28,1)
+        y_train = tf.keras.utils.to_categorical(y_train,10)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 
         dataset = dataset.shuffle(60000, seed=10)
-
-
-
-        bucket[self.options['TrainDataset']] = dataset
-        bucket[self.options['TrainDatasetSize']] = x_train.shape[0]
-
-        
+        train = dataset.take(54000).repeat()
+        validation = dataset.skip(54000).take(6000).repeat()
+       
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
+        y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        bucket[self.options['TestDataset']] = testset
-
+        testset = testset.repeat()
+        return ((train,54000),(validation,6000),(testset,10000))
 
 class FashionMnistDataset(ErmineUnit):
     def __init__(self):
@@ -236,7 +236,7 @@ class FashionMnistDataset(ErmineUnit):
         bucket[self.options['TestDataset']] = x_test_ds.zip(y_test_ds)
 
 
-
+'''
 class Cifar10Dataset(ErmineUnit):
     def __init__(self):
         super().__init__()
@@ -405,3 +405,4 @@ class DatasetPipeline(ErmineUnit):
         bucket[self.options['TestDataset']] = x_test_ds.zip(y_test_ds)
 
 
+'''
