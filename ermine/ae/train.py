@@ -1,10 +1,10 @@
-import os
 import tensorflow as tf
+import os
 from typing import List
 from ermine import ErmineUnit, OptionInfo, OptionDirection, Bucket
 
 
-class ModelCompile(ErmineUnit):
+class AutoEncoderModelCompile(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -35,11 +35,12 @@ class ModelCompile(ErmineUnit):
         if self.options['Optimizer'] == 'SGD':
             optimizer = tf.keras.optimizers.SGD(lr=lr)
         else:
-            optimizer = tf.keras.optimizers.Adam()
-        model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+            optimizer = tf.keras.optimizers.Adam(lr=lr)
+        model.compile(loss='binary_crossentropy', optimizer=optimizer)
         bucket[self.options['DestModel']] = model
 
-class ModelTrain(ErmineUnit):
+
+class AutoEncoderModelTrain(ErmineUnit):
     def __init__(self):
         super().__init__()
 
@@ -147,8 +148,14 @@ class ModelTrain(ErmineUnit):
         steps_per_epoch = train_size//batch_size
         validation_steps = validation_size//batch_size
 
-        train_dataset = train_dataset.repeat().batch(batch_size)
-        validation_dataset = validation_dataset.repeat().batch(batch_size)
+        def map_fn(x, y):
+            return (x,x)
+
+        train_dataset = train_dataset.map(map_func=map_fn).repeat().batch(batch_size)
+        validation_dataset = validation_dataset.map(map_func=map_fn).repeat().batch(batch_size)
+
+        print(train_dataset)
+        print(validation_dataset)
 
         callbacks = []
         if bool(self.options['TensorBoard']):

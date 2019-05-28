@@ -7,18 +7,18 @@
             }
         },
         {
-            "name": "ermine.classification.model.SimpleCNN",
+            "name": "ermine.ae.model.SimpleAutoEncoder",
             "options":{
                 "message_key":"Message"
             }
         },
         {
-            "name": "ermine.classification.train.ModelCompile",
+            "name": "ermine.ae.train.AutoEncoderModelCompile",
             "options":{
             }
         },
         {
-            "name": "ermine.classification.train.ModelTrain",
+            "name": "ermine.ae.train.AutoEncoderModelTrain",
             "options":{
                 "TensorBoard": "True",
                 "BatchSize" : "100"

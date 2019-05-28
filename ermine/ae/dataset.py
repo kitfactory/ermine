@@ -31,5 +31,3 @@ class MnistDataset(ErmineUnit):
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, x_test))
         bucket[self.options['TestDataset']] = testset
-
-

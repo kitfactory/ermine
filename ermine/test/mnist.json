@@ -6,7 +6,12 @@
                 "message_key":"$GLOBAL.MessageKey$",
                 "task": "$GLOBAL.TASK$"
             }
-        }
+        },
+        {
+            "name": "ermine.classification.dataset.CsvClassifyDataset",
+            "options":{
+            }
+        }        
    ],
 
    "globals":{
