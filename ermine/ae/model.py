@@ -34,12 +34,13 @@ class SimpleAutoEncoder(ErmineUnit):
         inputs = tf.keras.layers.Input(shape=(size,size,channel))
         input2 = tf.keras.layers.Reshape((size*size*channel,))(inputs)
 
-        mid1 = tf.keras.layers.Dense(size*size*channel/4, activation='relu')(input2)
-        mid2 = tf.keras.layers.Dense(size*size*channel/16, activation='relu')(mid1)
-        mid3 = tf.keras.layers.Dense(size*size*channel/64, activation='relu')(mid2)
-        mid4 = tf.keras.layers.Dense(size*size*channel/16, activation='relu')(mid3)
-        mid5 = tf.keras.layers.Dense(size*size*channel/4, activation='relu')(mid4)
-        last = tf.keras.layers.Dense(size*size*channel, activation='sigmoid')(mid5)
+        mid1 = tf.keras.layers.Dense(size*size*channel//4, activation='relu')(input2)
+        mid2 = tf.keras.layers.Dense(size*size*channel//16, activation='relu')(mid1)
+        mid3 = tf.keras.layers.Dense(size*size*channel//64, activation='relu')(mid2)
+        mid4 = tf.keras.layers.Dense(size*size*channel//64, activation='relu')(mid3)
+        mid5 = tf.keras.layers.Dense(size*size*channel//16, activation='relu')(mid4)
+        mid6 = tf.keras.layers.Dense(size*size*channel//4, activation='relu')(mid5)
+        last = tf.keras.layers.Dense(size*size*channel, activation='sigmoid')(mid6)  # use sigmoid activation at the last layer.
         
         reshape = tf.keras.layers.Reshape((size, size, channel))(last)
         model = tf.keras.Model(inputs=inputs, outputs=reshape)
