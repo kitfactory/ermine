@@ -1,7 +1,7 @@
 {
     "units":[
         {
-            "name": "ermine.classification.dataset.MnistDataset",
+            "name": "ermine.image.dataset.MnistDataset",
             "options":{
                 "message_key":"Message"
             }

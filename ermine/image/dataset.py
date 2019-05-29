@@ -211,9 +211,9 @@ class CsvClassifyDataset(ImageClassificationDataset):
             img = img/255.0
             return (img,y)
 
-        train_ds = tf.data.Dataset.from_tensor_slices((images[:trains],labels[:trains])).map(map_func=map_fn).repeat()
-        validation_ds = tf.data.Dataset.from_tensor_slices((images[trains:],labels[trains:])).map(map_func=map_fn).repeat()
-        test_ds = tf.data.Dataset.from_tensor_slices((test_images[trains:],test_labels[trains:])).map(map_func=map_fn).repeat()
+        train_ds = tf.data.Dataset.from_tensor_slices((images[:trains],labels[:trains])).map(map_func=map_fn)
+        validation_ds = tf.data.Dataset.from_tensor_slices((images[trains:],labels[trains:])).map(map_func=map_fn)
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images[trains:],test_labels[trains:])).map(map_func=map_fn)
 
         return ((train_ds,trains),(validation_ds,validation),(test_ds,test_data_num))
 
