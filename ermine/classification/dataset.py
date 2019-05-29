@@ -239,7 +239,6 @@ class MnistDataset(ImageClassificationDataset):
 
         y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        testset = testset.repeat()
         return ((train,54000),(validation,6000),(testset,10000))
 
 
@@ -264,44 +263,39 @@ class FashionMnistDataset(ErmineUnit):
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
         y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        testset = testset.repeat()
         return ((train,54000),(validation,6000),(testset,10000))
 
 
-'''
-class Cifar10Dataset(ErmineUnit):
+class Cifar10Dataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
 
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def run(self, bucket: Bucket):
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+        num = x_train.shape[0]
+        train_num = nums//10*9
+        validation_num = nums//10
         x_train = x_train/255.0
         x_train = x_train.astype(np.float32)
-        print("x_train.shape =" , x_train.shape)
-        print("y_train.shape =" , y_train.shape)
         x_train = x_train.reshape(x_train.shape[0],32,32,3)
-        y_train = y_train.reshape(y_train.shape[0])
+        y_train = tf.keras.utils.to_categorical(y_train,10)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-        bucket[self.options['TrainDataset']] = dataset
+
+        dataset = dataset.shuffle(nums, seed=10)
+        train = dataset.take(train_num)
+        validation = dataset.skip(train_num).take(validation_num)
+
+        test_num = x_test.shape[0]
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],32,32, 3)
-        y_test = y_test.reshape(y_test.shape[0])
+
+        y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        bucket[self.options['TestDataset']] = testset
+        return ((train,train_num),(validation,validation_num),(testset,test_num))
 
 
+'''
 class TFDSDataset(ErmineUnit):
 
     dataset_name = 'mnist'
