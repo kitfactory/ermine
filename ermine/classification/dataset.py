@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
+import pandas as pd
 from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
 # , LogUtil
 
@@ -111,24 +112,34 @@ class CsvClassifyDataset(ErmineUnit):
 
     @classmethod
     def prepare_option_infos(self) -> List[OptionInfo]:
-        datadir = OptionInfo(
-            name='DataDir',
+        csvpath = OptionInfo(
+            name='CsvPath',
             direction=OptionDirection.PARAMETER,
             values=['data.csv'])
         image = OptionInfo(
-            name='Image', direction=OptionDirection.PARAMETER, values=['image'])
+            name='ImageFileColumn', direction=OptionDirection.PARAMETER, values=['image'])
         label = OptionInfo(
-            name='Label', direction=OptionDirection.PARAMETER, values=['label'])
-        classes = OptionInfo(
-            name='Classes', direction=OptionDirection.PARAMETER, values=['2'])
+            name='LabelColumn', direction=OptionDirection.PARAMETER, values=['label'])
         dest = OptionInfo(
             name='DestDataset',
             direction=OptionDirection.OUTPUT,
             values=['DATASET'])
-        return [datadir, image, label, classes, dest]
+        return [csvpath, image, label, classes, dest]
 
     def run(self):
-        pass
+        csvfile = self.options['CsvPath']
+        df = pd.read_csv(csvfile)
+        image_column = self.options['ImagePathColumn']
+        label_column = self.options['LabelColumn']
+        image_files = df[image_column]
+        label = df[label_column]
+
+        
+        
+
+
+
+
 
 
 class MnistDataset(ErmineUnit):
