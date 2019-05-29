@@ -1,14 +1,66 @@
 from typing import List
 import os
 import tensorflow as tf
-import tensorflow_datasets as tfds
+# import tensorflow_datasets as tfds
 import numpy as np
 import pandas as pd
 from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
+from abc import abstractmethod
 # , LogUtil
 
+class ImageClassificationDataset(ErmineUnit):
+    def __init__(self):
+        super().__init__()
+    
+    @classmethod
+    def prepare_option_infos(self) -> List[OptionInfo]:
+        train = OptionInfo(
+            name='TrainDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['TRAIN_DATASET'])
 
+        train_size = OptionInfo(
+            name='TrainDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['TRAIN_DATASET_SIZE'])
+        
+        validation = OptionInfo(
+            name='ValidationDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['VALIDATION_DATASET'])
 
+        validation_size = OptionInfo(
+            name='ValidationDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['VALIDATION_DATASET_SIZE'])
+
+        test = OptionInfo(
+            name='TestDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['TEST_DATASET'])
+
+        test_size = OptionInfo(
+            name='TestDatasetSize',
+            direction=OptionDirection.OUTPUT,
+            values=['TEST_DATASET_SIZE'])
+
+        return [train, train_size, validation, validation_size, test, test_size]
+
+    @abstractmethod
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+        pass
+    
+    def run(self, bucket: Bucket):
+        (train,train_size),(validation,validation_size),(test, test_size) = self.load_dataset()
+        bucket[self.options['TrainDataset']] = train
+        bucket[self.options['TrainDatasetSize']] = train_size
+        bucket[self.options['ValidationDataset']] = validation
+        bucket[self.options['ValidationDatasetSize']] = validation_size
+        bucket[self.options['TestDataset']] = test
+        bucket[self.options['TestDatasetSize']] = test_size
+        print(bucket)
+
+'''
 class DirectoryClassDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
@@ -106,133 +158,144 @@ class DirectoryClassDataset(ErmineUnit):
         bucket[self.options['DestDataset']] = all_dataset
 
 
-class CsvClassifyDataset(ErmineUnit):
+'''
+
+
+class CsvClassifyDataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
 
     @classmethod
     def prepare_option_infos(self) -> List[OptionInfo]:
-        csvpath = OptionInfo(
-            name='CsvPath',
+
+        infos = ImageClassificationDataset.prepare_option_infos()
+
+        train = OptionInfo(
+            name='TrainFile',
             direction=OptionDirection.PARAMETER,
-            values=['data.csv'])
+            values=['train.csv'])
+        test = OptionInfo(
+            name='TestFile',
+            direction=OptionDirection.PARAMETER,
+            values=['test.csv'])
         image = OptionInfo(
             name='ImageFileColumn', direction=OptionDirection.PARAMETER, values=['image'])
         label = OptionInfo(
-            name='LabelColumn', direction=OptionDirection.PARAMETER, values=['label'])
-        dest = OptionInfo(
-            name='DestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        return [csvpath, image, label, classes, dest]
-
-    def run(self):
-        csvfile = self.options['CsvPath']
-        df = pd.read_csv(csvfile)
-        image_column = self.options['ImagePathColumn']
-        label_column = self.options['LabelColumn']
-        image_files = df[image_column]
-        label = df[label_column]
-
-        
-        
+            name='Label', direction=OptionDirection.PARAMETER, values=['label'])
+        return infos + [train, test, image, label]
 
 
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+        train_csv = pd.read_csv(self.options['TrainFile'])
+        # shuffle
+        train_csv = train_csv.sample(frac=1).reset_index(drop=True)
+        labels = train_csv[self.options['Label']].values.astype(np.uint8)
+        max_label = labels.max() + 1
+        labels = tf.keras.utils.to_categorical(labels,num_classes=max_label)
+        train_data_num = len(labels)
+        images = train_csv[self.options['Image']].values
 
+        trains = (train_data_num // 10 * 9) + (train_data_num % 10)
+        validation = (train_data_num // 10)
+        classes = max_label
+        test_csv = pd.read_csv(self.options['TestFile'])
+        test_labels = test_csv[self.options['Label']].values.astype(np.uint8)
+        test_labels = tf.keras.utils.to_categorical(test_labels,num_classes=max_label)
+        test_images = test_csv[self.options['Image']].values
+        test_data_num = len(test_labels)
+ 
+        def map_fn(x,y):
+            raw = tf.io.read_file(x)
+            img = tf.io.decode_image(raw, channels=3)
+            img = tf.cast(img, dtype=tf.float32)
+            img = img/255.0
+            return (img,y)
 
+        train_ds = tf.data.Dataset.from_tensor_slices((images[:trains],labels[:trains])).map(map_func=map_fn).repeat()
+        validation_ds = tf.data.Dataset.from_tensor_slices((images[trains:],labels[trains:])).map(map_func=map_fn).repeat()
+        test_ds = tf.data.Dataset.from_tensor_slices((test_images[trains:],test_labels[trains:])).map(map_func=map_fn).repeat()
 
+        return ((train_ds,trains),(validation_ds,validation),(test_ds,test_data_num))
 
-class MnistDataset(ErmineUnit):
+class MnistDataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
 
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def run(self, bucket: Bucket):
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
         x_train = x_train/255.0
         x_train = x_train.astype(np.float32)
         x_train = x_train.reshape(x_train.shape[0],28,28,1)
+        y_train = tf.keras.utils.to_categorical(y_train,10)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-        bucket[self.options['TrainDataset']] = dataset
+
+        dataset = dataset.shuffle(60000, seed=10)
+        train = dataset.take(54000)
+        validation = dataset.skip(54000).take(6000)
+       
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
+
+        y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        bucket[self.options['TestDataset']] = testset
+        return ((train,54000),(validation,6000),(testset,10000))
 
 
 class FashionMnistDataset(ErmineUnit):
     def __init__(self):
         super().__init__()
 
-    @classmethod
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def run(self, bucket: Bucket):
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
         x_train = x_train/255.0
-        x_train_ds: tf.data.Dataset = tf.data.Dataset.from_tensor_slices(x_train)
-        y_train_ds: tf.data.Dataset = tf.data.Dataset.from_tensor_slices(y_train)
-        bucket[self.options['TrainDataset']] = x_train_ds.zip(y_train_ds)
+        x_train = x_train.astype(np.float32)
+        x_train = x_train.reshape(x_train.shape[0],28,28,1)
+        y_train = tf.keras.utils.to_categorical(y_train,10)
+        dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+
+        dataset = dataset.shuffle(60000, seed=10)
+        train = dataset.take(54000).repeat()
+        validation = dataset.skip(54000).take(6000).repeat()
+       
         x_test = x_test/255.0
-        x_test_ds: tf.data.Dataset = tf.data.Dataset.from_tensor_slices(x_test)
-        y_test_ds: tf.data.Dataset = tf.data.Dataset.from_tensor_slices(y_test)
-        bucket[self.options['TestDataset']] = x_test_ds.zip(y_test_ds)
+        x_test = x_test.astype(np.float32)
+        x_test = x_test.reshape(x_test.shape[0],28,28, 1)
+        y_test = tf.keras.utils.to_categorical(y_test,10)
+        testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+        return ((train,54000),(validation,6000),(testset,10000))
 
 
-
-class Cifar10Dataset(ErmineUnit):
+class Cifar10Dataset(ImageClassificationDataset):
     def __init__(self):
         super().__init__()
 
-    def prepare_option_infos(self) -> List[OptionInfo]:
-        train = OptionInfo(
-            name='TrainDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['DATASET'])
-        test = OptionInfo(
-            name='TestDataset',
-            direction=OptionDirection.OUTPUT,
-            values=['TEST_DATASET'])
-        return [train, test]
-
-    def run(self, bucket: Bucket):
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+    def load_dataset(self)->((tf.data.Dataset,int),(tf.data.Dataset,int),(tf.data.Dataset,int)):
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+        num = x_train.shape[0]
+        train_num = nums//10*9
+        validation_num = nums//10
         x_train = x_train/255.0
         x_train = x_train.astype(np.float32)
-        print("x_train.shape =" , x_train.shape)
-        print("y_train.shape =" , y_train.shape)
         x_train = x_train.reshape(x_train.shape[0],32,32,3)
-        y_train = y_train.reshape(y_train.shape[0])
+        y_train = tf.keras.utils.to_categorical(y_train,10)
         dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-        bucket[self.options['TrainDataset']] = dataset
+
+        dataset = dataset.shuffle(nums, seed=10)
+        train = dataset.take(train_num)
+        validation = dataset.skip(train_num).take(validation_num)
+
+        test_num = x_test.shape[0]
         x_test = x_test/255.0
         x_test = x_test.astype(np.float32)
         x_test = x_test.reshape(x_test.shape[0],32,32, 3)
-        y_test = y_test.reshape(y_test.shape[0])
+
+        y_test = tf.keras.utils.to_categorical(y_test,10)
         testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        bucket[self.options['TestDataset']] = testset
+        return ((train,train_num),(validation,validation_num),(testset,test_num))
 
 
+'''
 class TFDSDataset(ErmineUnit):
 
     dataset_name = 'mnist'
@@ -368,3 +431,4 @@ class DatasetPipeline(ErmineUnit):
         bucket[self.options['TestDataset']] = x_test_ds.zip(y_test_ds)
 
 
+'''
