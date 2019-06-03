@@ -1,3 +1,49 @@
+import tensorflow as tf
+from .. base import ErmineUnit
+
+class ImageAugument(ErmineUnit):
+
+    @classmethod
+    def prepare_option_infos(self) -> List[OptionInfo]:
+        train = OptionInfo(
+            name='TrainDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['TRAIN_DATASET'])
+
+        train_size = OptionInfo(
+            name='TrainDatasetSize',
+            direction=OptionDirection.INPUT,
+            values=['TRAIN_DATASET_SIZE'])
+        
+        validation = OptionInfo(
+            name='ValidationDataset',
+            direction=OptionDirection.OUTPUT,
+            values=['VALIDATION_DATASET'])
+
+        validation_size = OptionInfo(
+            name='ValidationDatasetSize',
+            direction=OptionDirection.INPUT,
+            values=['VALIDATION_DATASET_SIZE'])
+
+
+        return [train, train_size, validation, validation_size, test, test_size]
+
+    @abstractmethod
+    def augument_images(self, train: tf.data.Dataset, validation: tf.data.Dataset)->(tf.data.Dataset, tf.data.Dataset):
+        pass
+
+    def run(self, bucket: Bucket):
+        train = bucket[self.options['TrainDataset']]
+        validation = bucket[self.options['ValidationDataset']]
+        test = bucket[self.options['TestDataset']]
+        train, validation, test = self.change_image_size(train, validation, test)
+        bucket[self.options['TrainDataset']] = train
+        bucket[self.options['ValidationDataset']] = validation
+        bucket[self.options['TestDataset']] = test
+
+
+
+
 class GeneralImageAugument(ErmineUnit):
     def __init__(self):
         super().__init__()

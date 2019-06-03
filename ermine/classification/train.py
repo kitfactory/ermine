@@ -78,7 +78,7 @@ class ModelTrain(ErmineUnit):
         trial_name = OptionInfo(
              name='TraialName',
              direction=OptionDirection.PARAMETER,
-             values=['traial1'])
+             values=['traial'])
 
         early_stopping = OptionInfo(
             name='EarlyStopping',

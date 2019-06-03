@@ -200,3 +200,26 @@ with tf.Session() as sess:
  
 =======
 >>>>>>> e5ac523ad93226b384a05a1257124502774dc217
+
+
+
+# TFX
+
+
+#### サブクラスの取得
+追記
+やっぱりあった。
+
+id:mopemope さん『何もしなくてもOutputBase.__subclasses__()でいけるはずです』
+
+
+class OptunaCallback(Callback):
+    def __init__(self, trial):
+        self.trial = trial
+
+    def on_epoch_end(self, epoch, logs):
+        current_val_error = 1.0 - logs["val_acc"]
+        self.trial.report(current_val_error, step=epoch)
+        # 打ち切り判定
+        if self.trial.should_prune(epoch):
+            raise optuna.structs.TrialPruned()

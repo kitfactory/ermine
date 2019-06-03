@@ -36,5 +36,6 @@ def progress():
 
 
 if __name__ == '__main__':
+    print('running web server ....')
     app.debug = True
     app.run(port=7007)

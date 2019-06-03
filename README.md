@@ -8,6 +8,13 @@ Ermine is executor of the machine learning program which is composed from units.
 
 You can edit combination of the machine learning units with excellent GUI. You can execute machine learning program like the block play. Super cool :-)
 
+### 1.1. TensorFlow 2.0 Based
+
+### 1.2. Optuna Hyperparameter Tuning
+
+### 1.3. Adabound optimizer support
+
+
 ## 2.Installation
 
 ```
@@ -97,3 +104,9 @@ Now prinitng...
 ### 5.1. Create new unit.
 
 ### 5.2. Add the new unit to Ermine.
+
+
+
+
+
+

@@ -9,25 +9,27 @@ import json
 import tensorflow as tf
 
 
-
-
 class OptionDirection(Enum):
     INPUT = 1
     OUTPUT = 2
     PARAMETER = 3
 
+class OptionType(Enum):
+    INT = 1
+    FLOAT = 2
+    CATEGORY =3
 
 class ErmineException(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
 
 class OptionInfo():
     def __init__(self,
                  json: str = None,
                  name: str = None,
                  direction: OptionDirection = OptionDirection.PARAMETER,
-                 values: List[str] = ['']):
+                 values: List[str] = [''],
+                 option_type: OptionType = OptionType.FLOAT):
         if json is not None:
             dict: Dict = json.load(json)
             self.name = dict['name']
@@ -38,11 +40,12 @@ class OptionInfo():
             }
             self.direction = direction[dict['direction']]
             self.values = dict['default']
-
+            self.type = option_type
         else:
             self.name = name
             self.direction = direction
             self.values = values
+            self.type = option_type
 
     def get_name(self) -> str:
         return self.name
@@ -58,6 +61,9 @@ class OptionInfo():
 
     def to_string(self) -> str:
         return ''
+
+    def get_type(self)->OptionType:
+        return self.type
 
 
 class Bucket(Dict):
@@ -418,7 +424,6 @@ class WooUnit(ErmineUnit):
 
 import sys
 
-
 def main():
     print('Welcome to Ermine!!')
     argv = sys.argv
@@ -539,5 +544,55 @@ tf.keras.estimator.model_to_estimator(
 
 mage_col = tf.feature_column.numeric_column('pixels', shape=[image_width * image_height])
 
+* trainer共通化
+* Optuna実行
+    * 引数生成
+    * ファイル生成：
+    * ファイル実行：
+* Webサーバー
+    * 特定のサブクラスのリストを返却 (引数　task/classification,dataset,transform/augumentation/training/)
+    * 引数一覧を返却
+    * 指定の引数で実行
+* WebからJSONで実行
+    * 
 
+
+
+{
+    "units":[
+        {
+            "name": "ermine.classification.dataset.MnistDataset",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.ae.model.SimpleAutoEncoder",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.ae.train.AutoEncoderModelCompile",
+            "options":{
+            }
+        },
+        {
+            "name": "ermine.ae.train.AutoEncoderModelTrain",
+            "options":{
+                "TensorBoard": "True",
+                "BatchSize" : "100"
+            }
+        }
+   ],
+
+   "globals":{
+        "Batch": "100",
+        "Class": "10"
+    },
+
+    "tunings":{
+        "":""
+    }
+}
 '''

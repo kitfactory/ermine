@@ -5,7 +5,7 @@ import numpy as np
 from .. base import ErmineUnit, OptionInfo, OptionDirection, Bucket
 from abc import abstractmethod
 
-class ImageSizeUnit(ErmineUnit):
+class ImageTransform(ErmineUnit):
     def __init__(self):
         super().__init__()
     
@@ -29,7 +29,7 @@ class ImageSizeUnit(ErmineUnit):
         return [train, validation, test]
 
     @abstractmethod
-    def change_image_size(self, train: tf.data.Dataset, validation: tf.data.Dataset, test: tf.data.Dataset)->(tf.data.Dataset, tf.data.Dataset, tf.data.Dataset):
+    def transform_images(self, train: tf.data.Dataset, validation: tf.data.Dataset, test: tf.data.Dataset)->(tf.data.Dataset, tf.data.Dataset, tf.data.Dataset):
         pass
 
     def run(self, bucket: Bucket):
@@ -42,13 +42,13 @@ class ImageSizeUnit(ErmineUnit):
         bucket[self.options['TestDataset']] = test
 
 
-class ImageResizeWithCropOrPad(ImageSizeUnit):
+class ImageResizeWithCropOrPad(ImageTransform):
     def __init__(self):
         super().__init__()
 
     @classmethod
     def prepare_option_infos(self) -> List[OptionInfo]:
-        infos = ImageSizeUnit.get_option_infos()
+        infos = ImageTransform.get_option_infos()
         size = OptionInfo(
             name='Size',
             direction=OptionDirection.PARAMETER,
@@ -65,13 +65,13 @@ class ImageResizeWithCropOrPad(ImageSizeUnit):
         test = test.map(map_func=resize)
         return (train,validation,test)
 
-class ImageResize(ImageSizeUnit):
+class ImageResize(ImageTransform):
     def __init__(self):
         super().__init__()
 
     @classmethod
     def prepare_option_infos(self) -> List[OptionInfo]:
-        infos = ImageSizeUnit.get_option_infos()
+        infos = ImageTransform.get_option_infos()
         size = OptionInfo(
             name='Size',
             direction=OptionDirection.PARAMETER,
@@ -89,13 +89,13 @@ class ImageResize(ImageSizeUnit):
         return (train,validation,test)
 
 
-class ImageCenterCrop(ImageSizeUnit):
+class ImageCenterCrop(ImageTransform):
     def __init__(self):
         super().__init__()
 
     @classmethod
     def prepare_option_infos(self) -> List[OptionInfo]:
-        infos = ImageSizeUnit.get_option_infos()
+        infos = ImageTransform.get_option_infos()
         size = OptionInfo(
             name='Size',
             direction=OptionDirection.PARAMETER,

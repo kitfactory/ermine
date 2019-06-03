@@ -19,7 +19,8 @@ setuptools.setup(
     ],
     entry_points = {
         'console_scripts':[
-            'ermine-runner = ermine.base:main'
+            'ermine-runner = ermine.base:main',
+            'ermine-web = ermine.web:main'
         ]
     }
 )
