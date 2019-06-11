@@ -223,3 +223,93 @@ class OptunaCallback(Callback):
         # 打ち切り判定
         if self.trial.should_prune(epoch):
             raise optuna.structs.TrialPruned()
+
+
+#### モデルの評価
+
+- AUC/ROC しきい値の設定
+- 
+tf.keras.metrics.AUC
+
+
+### 評価タスクの実行
+
+- データセットの選択
+- 前処理条件の選択
+- モデルファイルの選択
+- クラス敷居値オプション
+- CSV結合オプション
+- 画像保存オプション
+- yellowbrick
+
+
+### Angular
+
+#### ElectronとAngularの関係
+- https://github.com/maximegris/angular-electron/blob/master/README.md
+
+
+#### Angular
+コンポーネントの作成
+
+```
+> ng new 
+
+```
+### サービス
+
+
+
+### ルーティング
+
+
+- ngx-build-plus
+
+Create a new Angular project with the CLI
+
+Add ngx-build-plus: ng add ngx-build-plus
+
+
+Note: If you want to add it to specific sub project in your projects folder, use the --project switch to point to it: ng add ngx-build-plus --project getting-started
+
+Remark: This step installs the package via npm and updates your angular.json so that your project uses custom builders for ng serve and ng build.
+
+Add a file webpack.partial.js to the root of your (sub-)project:
+
+const webpack = require('webpack');
+
+module.exports = {
+    plugins: [
+        new webpack.DefinePlugin({
+            "VERSION": JSON.stringify("4711")
+        })
+    ]
+}
+Use the global variable VERSION in your app.component.ts:
+
+import { Component } from '@angular/core';
+
+declare const VERSION: string;
+
+@Component({
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+    title = 'Version: ' + VERSION;
+}
+Start your application with the --extra-webpack-config switch pointing to your partial webpack config:
+
+ng serve --extra-webpack-config webpack.partial.js -o
+If your project is a CLI based sub project, use the --project switch too:
+
+ng serve --project getting-started -o --extra-webpack-config webpack.partial.js
+Hint: Consider creating a npm script for this command.
+
+Make sure that the VERSION provided by your webpack config is displayed.
+
+
+
+- 
+- 
