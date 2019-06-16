@@ -9,6 +9,7 @@ from abc import abstractmethod
 # , LogUtil
 
 class ImageClassificationDataset(ErmineUnit):
+
     def __init__(self):
         super().__init__()
     
@@ -209,7 +210,7 @@ class CsvClassifyDataset(ImageClassificationDataset):
             img = tf.io.decode_image(raw, channels=3)
             img = tf.cast(img, dtype=tf.float32)
             img = img/255.0
-            return (img,y)
+            return (x,y,img)
 
         train_ds = tf.data.Dataset.from_tensor_slices((images[:trains],labels[:trains])).map(map_func=map_fn)
         validation_ds = tf.data.Dataset.from_tensor_slices((images[trains:],labels[trains:])).map(map_func=map_fn)
@@ -227,7 +228,9 @@ class MnistDataset(ImageClassificationDataset):
         x_train = x_train.astype(np.float32)
         x_train = x_train.reshape(x_train.shape[0],28,28,1)
         y_train = tf.keras.utils.to_categorical(y_train,10)
-        dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+        id_train = list(range(0,60000))
+        id_train = np.array(id_train)
+        dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train,id_train))
 
         dataset = dataset.shuffle(60000, seed=10)
         train = dataset.take(54000)
@@ -238,7 +241,9 @@ class MnistDataset(ImageClassificationDataset):
         x_test = x_test.reshape(x_test.shape[0],28,28, 1)
 
         y_test = tf.keras.utils.to_categorical(y_test,10)
-        testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+        id_test = range(0,10000)
+        id_test = np.array(id_test)
+        testset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test, id_test))
         return ((train,54000),(validation,6000),(testset,10000))
 
 

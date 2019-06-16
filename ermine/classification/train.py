@@ -108,12 +108,12 @@ class ModelTrain(ErmineUnit):
         check_point_save_weigths_only = OptionInfo(
             name='ModelCheckpoint.SaveWeightsOnly',
             direction=OptionDirection.PARAMETER,
-            values=['True', 'False'])
+            values=['False','True'])
         
         check_point_file_path = OptionInfo(
             name='ModelCheckpoint.FilePath',
             direction=OptionDirection.PARAMETER,
-            values=['weights.hdf5'])
+            values=['checkpoint.hdf5'])
             # values=['weights-{epoch:02d}-{val_loss:.2f}.hdf5'])
         
         max_epoch = OptionInfo(
@@ -131,12 +131,13 @@ class ModelTrain(ErmineUnit):
 
     def run(self, bucket: Bucket):
 
-        # sess = tf.Session()
-        # sess.as_default()
+        def remove_idx(x, y, id):
+            return (x,y)
 
         model: tf.keras.Model = bucket[self.options['Model']]
         model.summary()
         train_dataset: tf.data.Dataset = bucket[self.options['TrainDataset']]
+        train_dataset = train_dataset.map(remove_idx)
         train_size: int = int(bucket[self.options['TrainDatasetSize']])
         validation_dataset: tf.data.Dataset = bucket[self.options['ValidaitonDataset']]
         validation_size: int = int(bucket[self.options['ValidationDatasetSize']])
@@ -172,8 +173,7 @@ class ModelTrain(ErmineUnit):
             weigths = bool(self.options['ModelCheckpoint.SaveWeightsOnly'])
             filepath = self.globals['TASKDIR'] + os.path.sep + self.options['TraialName'] +  os.path.sep + self.options['ModelCheckpoint.FilePath']
 
-            sv_cb = tf.keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_loss', save_best_only=best, save_weights_only=weigths, verbose=1)
+            sv_cb = tf.keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_loss', save_best_only=best, save_weights_only=False, verbose=1)
             callbacks.append(sv_cb)
 
         model.fit(train_dataset, validation_data=validation_dataset, callbacks=callbacks, epochs=max_epoch, steps_per_epoch=steps_per_epoch, validation_steps=validation_steps)
-

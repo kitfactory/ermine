@@ -250,66 +250,148 @@ tf.keras.metrics.AUC
 
 
 #### Angular
-コンポーネントの作成
+#### コンポーネントの作成
 
 ```
-> ng new 
+> ng g component new_component_ベース名
 
 ```
+
+#### プロパティの追加
+
+```
+export class FooComponent implements OnInit {
+
+    bar:string = "hoge";
+
+    constructor(){
+        this.bar = "hogehoge";
+    }
+
+    fooMethod(): void {
+        this.bar = "FooChange";
+    }
+
+```
+
+#### バインディング
+
+プロパティを単方向で
+
+```
+
+{{hoge}}
+
+```
+
+イベントを単方向で
+
+```
+<button (click)="fooMethod()">hoge</button>
+
+```
+
+双方向で
+
+```
+
+<input [(ngModel)]="プロパティ名">
+
+```
+
+#### フォームの利用(テンプレート駆動)
+
+app.module.tsにフォームモジュールの追加
+
+```
+import {FormModules} from '@angular/forms';
+
+```
+
+テンプレートにngModelで結びつけ
+
+```
+<input [(ngModel)]="プロパティ名">
+
+```
+
+#### フォームの利用(リアクティブフォーム)
+
+app.modules.tsにフォーム関係モジュールを追加する。
+
+```
+import {FormGroup, FormControl, ReactiveModule} from '@angular/forms';
+
+()
+
+imports: [
+    BrowserModule,
+    ReactiveFormsModule
+]
+
+```
+
+
+### ドロップダウン
+
+ng-For
+
 ### サービス
 
 
 
 ### ルーティング
+### Electronでローカル画像を触る
+
+```
+  mainWindow = new BrowserWindow({
+    webPreferences: {
+      webSecurity: false
+    }
+  })
+
+```
+
+### 
+CSVファイルのロード
+
+### 
+
+画像、クラシフィケーションタスクの設定
+
+* データセット (画像、ラベル、ID)
+* 
 
 
-- ngx-build-plus
+## 適合率
 
-Create a new Angular project with the CLI
-
-Add ngx-build-plus: ng add ngx-build-plus
+　適合率（precision、精度と訳されることもあります）は、いわば「どれだけ嘘の分類結果が少ないか」の指標です。端的にいうと、Positiveと判定されたものの中にどれだけPositiveが含まれているかの割合です（ちなみにNegativeでも理屈の上では同様に計算できる。これについてはずっと後ろで後述する）。インフルエンザ検査で例えると、検査が陽性になったけど実はインフルエンザにかかっていませんでした、という人がどれだけいるかの指標になります。
 
 
-Note: If you want to add it to specific sub project in your projects folder, use the --project switch to point to it: ng add ngx-build-plus --project getting-started
+## 再現率
 
-Remark: This step installs the package via npm and updates your angular.json so that your project uses custom builders for ng serve and ng build.
+　再現率(rcall)は、「どれだけ取りこぼさないで分類できたか」の指標です。真値がPositiveの人の何割をPositiveと判定できたかを表します。インフルエンザ検査では、インフルエンザにかかってるのに検査しても陽性にならなかった、という人がどれだけいるかの指標になります。
 
-Add a file webpack.partial.js to the root of your (sub-)project:
+## F1値
 
-const webpack = require('webpack');
+この適合率と再現率には、実はトレードオフがあります。上の例で、それぞれ適合率がほぼ100%のときの再現率、再現率が100%のときの適合率を考えてみると理解できるかと思います。そこで、中間くらいを取ってやれ、という指標を考えることができます。平均で良いじゃん、と思う訳ですが、実際には調和平均を使います。それがF1値（F1 measure）です。
 
-module.exports = {
-    plugins: [
-        new webpack.DefinePlugin({
-            "VERSION": JSON.stringify("4711")
-        })
-    ]
-}
-Use the global variable VERSION in your app.component.ts:
-
-import { Component } from '@angular/core';
-
-declare const VERSION: string;
-
-@Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-    title = 'Version: ' + VERSION;
-}
-Start your application with the --extra-webpack-config switch pointing to your partial webpack config:
-
-ng serve --extra-webpack-config webpack.partial.js -o
-If your project is a CLI based sub project, use the --project switch too:
-
-ng serve --project getting-started -o --extra-webpack-config webpack.partial.js
-Hint: Consider creating a npm script for this command.
-
-Make sure that the VERSION provided by your webpack config is displayed.
+F1値は分類結果の直接の良し悪しの指標になります。ですから、論文などではこれの改善*3を以て提案手法の有効性をアピールする、といったことがよく行われます。
 
 
+### 適合値
 
-- 
-- 
+Precision= TP/(TP+FP)
+
+### 再現率
+
+Recall=TP/(TP+FN)
+
+## F1-measure
+
+F1−measure=(2TP)/(2TP+FP+FN)
+
+バイナリ分類問題のプロセスとは異なり、予測を行うのにスコアしきい値を選択する必要はありません。予測される回答は、予測スコアが最も高いクラス (つまり、ラベル) です。時には、スコアが高いと予測される場合にのみ予測回答を使用することもできます。この場合は、予測された回答を受け入れるかどうかを決定するための予測スコアのしきい値を選択することができます。
+
+## one versus one / one versus others
+

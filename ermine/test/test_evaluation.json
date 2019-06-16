@@ -1,0 +1,26 @@
+{
+    "units":[
+        {
+            "name": "ermine.image.dataset.MnistDataset",
+            "options":{
+                "message_key":"Message"
+            }
+        },
+        {
+            "name": "ermine.classification.evaluation.ClassificationPredict",
+            "options":{
+                "ModelFile":"/Users/naruhide/.ermine/task/101/traial/checkpoint.hdf5",
+                "EvaluationType": "OneVersusOne",
+                "Threshold":"0.5"
+            }
+        }
+   ],
+
+   "globals":{
+        "Batch": "100",
+        "Class": "10"
+    },
+
+    "optimizer":{
+    }
+}

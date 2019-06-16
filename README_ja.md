@@ -63,7 +63,6 @@ Machine learning trainig process will have units bellow.
 GPUを使用した学習はインストール時にTensorFlow-GPUをインストールすことにより自動的に選択されます。
 
 
-
 # 5. Distribute Training.
 
 Now prinitng...
@@ -74,6 +73,7 @@ Now prinitng...
 
 
 # 7. How to use ermine trained model in your program.
+
 
 
 Ermine model can be transformed to TensorFlow Estimator. So create instance and.
