@@ -395,3 +395,24 @@ F1−measure=(2TP)/(2TP+FP+FN)
 
 ## one versus one / one versus others
 
+
+```
+
+>>> true = [0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3]
+>>> pred = [0,0,1,1,1,0,1,1,1,1,2,1,1,2,2,3,2,1,3,3]
+>>> from sklearn.metrics import confusion_matrix
+>>> confusion_matrix(true, pred)
+
+```
+
+```
+>>> true = [0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3]
+>>> pred = [0,0,1,1,1,0,1,1,1,1,2,1,1,2,2,3,2,1,3,3]
+>>> from sklearn.metrics import precision_recall_fscore_support
+>>> precision_recall_fscore_support(true, pred)
+(array([0.66666667, 0.4       , 0.75      , 1.        ]),
+ array([0.4, 0.8, 0.6, 0.6]),
+ array([0.5       , 0.53333333, 0.66666667, 0.75      ]),
+ array([5, 5, 5, 5])) # 結果は見やすいよう整形しています
+
+```
