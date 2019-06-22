@@ -86,18 +86,19 @@ class ClassificationPredict(ErmineUnit):
         ys = [] # y value
         ybs = [] # y in binary
         yhats = [] # y prediction in binary
+        ybhats = [] # y prediction in binary
         scores = []
 
         for x, y, i in dataset:
             score = model.predict(x)[0]
             w_score = score.copy()
             w_score[pickup_class] = 0.0
-            ps = 1.0 - w_score.max() # positive score
+            yh = 1.0 - w_score.max() # positive score
             ym = y.numpy().argmax()
-            if( ps >= threshold):
-                yh = 1
+            if( yh >= threshold):
+                ybh = 1
             else:
-                yh = 0
+                ybh = 0
             if ym == pickup_class:
                 yb = 1
             else:
@@ -107,21 +108,22 @@ class ClassificationPredict(ErmineUnit):
             ys.append(ym)
             ybs.append(yb)
             yhats.append(yh)
+            ybhats.append(ybh)
             scores.append(score)
 
         frame = pd.DataFrame(
-            data={'id':ids, 'y':ys, 'yb':ybs ,'yh':yhats, 'score':scores},
-            columns=['id','y', 'yb','yh', 'score']
+            data={'id':ids, 'y':ys, 'yb':ybs ,'yh':yhats, 'ybh':ybhats, 'score':scores},
+            columns=['id','y', 'yb','yh', 'ybh' 'score']
         )
         frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/binary_prediction.csv')
 
-        confusion =  metrics.confusion_matrix(ybs, yhats)
-        print(confusion)
+        confusion =  metrics.confusion_matrix(ybs, ybhats)
 
         # confusion.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/multi_confusion.csv')
 
         fpr, tpr, thresholds = metrics.roc_curve(ybs, yhats)
         auc = metrics.auc(fpr, tpr)
+        print(auc)
         roc_curve_frame = pd.DataFrame(
             data = {'fpr':fpr,'tpr':tpr,'threshold':thresholds, 'auc':auc},
             columns = {'fpr','tpr','threshold','auc'}
