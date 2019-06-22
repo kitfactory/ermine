@@ -416,3 +416,62 @@ F1−measure=(2TP)/(2TP+FP+FN)
  array([5, 5, 5, 5])) # 結果は見やすいよう整形しています
 
 ```
+
+```plantuml
+@startuml
+A->B
+@enduml
+```
+
+```plantuml
+@startuml
+!define start(yyyy,mm,dd) Project starts yyyy/mm/dd
+!define task(x,d) [<font:SansSerif>x</font>] lasts d days
+!define off_saturday saturday are closed
+!define off_sunday sundays are closed
+!define holiday(yyyy,mm,dd) yyyy/mm/dd is closed
+!define next_task(x,y) [<font:SansSerif>y</font>] starts at [<font:SansSerif>x</font>]'s end
+
+start(2019,6,10)
+off_saturday
+off_sunday
+
+holiday(2019,6,17)
+
+task(日本語入力,10)
+then task(日本語2,5)
+[mileston] happens at 2019/06/20
+task(3,60)
+
+
+@enduml
+```
+
+```plantuml
+@startmindmap
+* a
+** b
+*** d
+*** c
+** b
+*** e
+@endmindmap
+```
+
+
+* 評価に関してはCSV値を取得する。
+
+* train_image
+    - 学習の直前の画像を保存する?
+
+
+* get_roc_auc_score()
+    - rocとaucのJSONファイルを取得
+* get_prediction():
+    - image列の画像の取得
+
+* プレディクションファイル -> *__prediction.csv
+* roc_auc
+
+* 比較はあとででねー。
+    

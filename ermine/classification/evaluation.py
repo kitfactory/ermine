@@ -30,23 +30,22 @@ class ClassificationPredict(ErmineUnit):
             direction=OptionDirection.INPUT,
             values=['TEST_DATASET_SIZE'])
         
-        evaluation = OptionInfo(
-            name='EvaluationType',
+        prediction_type = OptionInfo(
+            name='Prediction',
             direction=OptionDirection.PARAMETER,
-            values=['MultiClass','BinaryPickupClass','BinaryPickupClassNegative'])
+            values=['Multiple','Binarization'])
         
-        pickup_class = OptionInfo(
-            name='PickupClass',
+        bin_class = OptionInfo(
+            name='Prediction.BinarizationClass',
             direction=OptionDirection.PARAMETER,
             values=['0'])
 
-        pickup_threshold = OptionInfo(
-            name='PickupThreshold',
+        bin_threshold = OptionInfo(
+            name='Prediction.BinarizationThreshold',
             direction=OptionDirection.PARAMETER,
-            values=['0.8'])
-    
-    
-        return [src, data, size, evaluation, pickup_class, pickup_threshold]
+            values=['0.5'])
+
+        return [src, data, size, prediction_type, bin_class, bin_threshold]
     
     def __draw_roc_curve(self, fpr, tpr, auc):
         plt.plot(fpr, tpr, label='ROC curve (area = %.2f)'%auc)
@@ -56,12 +55,16 @@ class ClassificationPredict(ErmineUnit):
         plt.ylabel('True Positive Rate')
         plt.grid(True)
         plt.show()
+
+    def __draw_confusion_matrix(self,confusion):
+        pass
         
-    def __evaluation_multiple_class_score(self, model, dataset):
+    def __predict_multi(self, model, dataset):
         ys = []
         yhats = []
         ids = []
         scores = []
+
         for x, y, i in dataset:
             score = model.predict(x)[0]
             ids.append(i.numpy())
@@ -69,48 +72,16 @@ class ClassificationPredict(ErmineUnit):
             ys.append(y.numpy().argmax())
         
         confusion =  metrics.confusion_matrix(ys, yhats)
+        confusion.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/multi_confusion.csv')
+
         frame = pd.DataFrame(
             data={'id':ids, 'y':ys, 'yh':yhats, 'score':scores},
             columns=['id','y', 'yh', 'score']
         )
-        frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/confusion.csv')
+        frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/multi_result.csv')
 
-    def ___evaluation_binrary_pickup_score(self, model, dataset, pickup_class, pickup_threshold):
-        ids = []
-        ys = [] # y value
-        ybs = [] # y in binary
-        yhats = [] # y prediction in binary
-        scores = []
 
-        for x, y, i in dataset:
-            score = model.predict(x)[0]
-            s = score[pickup_class]
-            ym = y.numpy().argmax()
-            if( s >= pickup_threshold):
-                yh = 1
-            else:
-                yh = 0
-            if ym == pickup_class:
-                yb = 1
-            else:
-                yb = 0
-
-            ids.append(i.numpy())
-            ys.append(ym)
-            ybs.append(yb)
-            yhats.append(yh)
-            scores.append(score)
-        
-        frame = pd.DataFrame(
-            data={'id':ids, 'y':ys, 'yb':ybs ,'yh':yhats, 'score':scores},
-            columns=['id','y', 'yb','yh', 'score']
-        )
-        frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/other_score.csv')
-        prfs = metrics.precision_recall_fscore_support(ybs, yhats)
-        auc = metrics.auc(fpr, tpr)
-        self.__draw_roc_curve(fpr,tpr,auc)
-
-    def ___evaluation_binray_others_score(self, model, dataset,pickup_class,pickup_threshold):
+    def __predict_binary(self, model, dataset,pickup_class, threshold):
         ids = []
         ys = [] # y value
         ybs = [] # y in binary
@@ -121,12 +92,12 @@ class ClassificationPredict(ErmineUnit):
             score = model.predict(x)[0]
             w_score = score.copy()
             w_score[pickup_class] = 0.0
-            s = w_score.max()
+            ps = 1.0 - w_score.max() # positive score
             ym = y.numpy().argmax()
-            if( s >= pickup_threshold):
-                yh = 0
-            else:
+            if( ps >= threshold):
                 yh = 1
+            else:
+                yh = 0
             if ym == pickup_class:
                 yb = 1
             else:
@@ -138,74 +109,41 @@ class ClassificationPredict(ErmineUnit):
             yhats.append(yh)
             scores.append(score)
 
-
         frame = pd.DataFrame(
             data={'id':ids, 'y':ys, 'yb':ybs ,'yh':yhats, 'score':scores},
             columns=['id','y', 'yb','yh', 'score']
         )
-        frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/other_score.csv')
-        prfs = metrics.precision_recall_fscore_support(ybs, yhats)
-        auc = metrics.auc(fpr, tpr)
-        self.__draw_roc_curve(fpr,tpr,auc)
+        frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/binary_prediction.csv')
 
+        confusion =  metrics.confusion_matrix(ybs, yhats)
+        print(confusion)
+
+        # confusion.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/multi_confusion.csv')
+
+        fpr, tpr, thresholds = metrics.roc_curve(ybs, yhats)
+        auc = metrics.auc(fpr, tpr)
+        roc_curve_frame = pd.DataFrame(
+            data = {'fpr':fpr,'tpr':tpr,'threshold':thresholds, 'auc':auc},
+            columns = {'fpr','tpr','threshold','auc'}
+        )
+        roc_curve_frame.to_csv(path_or_buf='/Users/naruhide/Documents/workspace/binary_roc.csv')
+        self.__draw_roc_curve(fpr,tpr,auc)
 
     def run(self, bucket: Bucket):
         f = self.options['ModelFile']
-        print(f)
         model: tf.keras.Model = tf.keras.models.load_model(f)
         dataset: tf.data.Dataset = bucket[self.options['TestDataset']]
         size: int = bucket[self.options['TestDatasetSize']]
-        evaluation = self.options['EvaluationType']
-        pickup_class = int(self.options['PickupClass'])
-        pickup_threshold = float(self.options['PickupThreshold'])
+
+        evaluation = self.options['Prediction']
+        pickup_class = int(self.options['Prediction.BinarizationClass'])
+        threshold = float(self.options['Prediction.BinarizationThreshold'])
         dataset = dataset.batch(1)
 
         if evaluation == 'MultiClass':
-            self.__evaluation_multiple_class_score(model,dataset)
-        elif evaluation== 'BinaryPickupClass':
-            self.___evaluation_binrary_pickup_score(model,dataset,pickup_class,pickup_threshold)
-        else:
-            self.___evaluation_binray_others_score(model,dataset,pickup_class,pickup_threshold)
-
-'''
-
-        for x, y, i in dataset:
-            score = model.predict(x)[0]
-            # print(score[0])
-            ids.append(i.numpy())
-            yh = -1
-
-            if evaluation == 'OneVersusOne':
-                yh = score.argmax()
-                ys.append(y.numpy().argmax())
-            elif evaluation == 'OneVersusOthers':
-                if y == pickup_class:
-                    y = 1
-                else:
-                    y = 0
-                s = score[pickup_class]
-                if s >= pickup_threshold:
-                    yh = 1
-                else:
-                    yh =  0
-                ys.append(y)
-
-            yhats.append(yh)
-            scores.append(score)
-
-        confusion =  metrics.confusion_matrix(ys, yhats)
-        prfs = metrics.precision_recall_fscore_support(ys, yhats)
-
-        fpr, tpr, thresholds = metrics.roc_curve(ys, yhats)
-        auc = metrics.auc(fpr, tpr)
-
-        print(confusion)
-        print(prfs)
-        self.__draw_roc_curve(fpr,tpr,auc)
-
-'''
-    
-
+            self.__predict_multi(model,dataset)
+        elif evaluation == 'Binarization':
+            self.__predict_binary(model,dataset,pickup_class,threshold)
 
 class ClassificationEvaluation(ErmineUnit):
     def __init__(self):

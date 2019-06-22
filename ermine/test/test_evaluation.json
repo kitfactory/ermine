@@ -10,8 +10,7 @@
             "name": "ermine.classification.evaluation.ClassificationPredict",
             "options":{
                 "ModelFile":"/Users/naruhide/.ermine/task/101/traial/checkpoint.hdf5",
-                "EvaluationType": "OneVersusOthers",
-                "Threshold":"0.85"
+                "Prediction":"Binarization"
             }
         }
    ],
