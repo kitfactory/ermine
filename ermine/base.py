@@ -314,7 +314,18 @@ class HomeFile():
     @staticmethod
     def make_seq_dir(seq: int):
         os.makedirs(HomeFile.get_seq_dir(seq))
+    
+    @staticmethod
+    def get_train_list(cls, type:int):
+        pass
 
+    @staticmethod
+    def get_next_train_data():
+        pass
+
+    @staticmethod
+    def prepare_database(cls):
+        print('init database')
 
 class Sequence():
     instance = None
