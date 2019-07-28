@@ -1,13 +1,17 @@
 from typing import List
 import os
 from os.path import expanduser, exists
+import json
 
 from .base import ErmineUnit
 from .base import OptionInfo
 from ermine.image.dataset import ImageClassificationDataset
 
+from .process import ProcessUtil
+
+
 # Flask などの必要なライブラリをインポートする
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect, request
 # , render_template, request, redirect, url_for
 
 from enum import Enum
@@ -27,6 +31,7 @@ class ErmineUnitType(Enum):
 
 
 class WebService():
+
     def __init__(self):
         super().__init__()
 
@@ -34,27 +39,27 @@ class WebService():
     def setup(cls):
         cls.home = expanduser("~")
         cls.unit_list = ['HelloUnit','Hello2Unit']
-
+        cls.process_util = ProcessUtil()
 
     @classmethod
     def units(cls, data:ErmnDataType, task:ErmineTaskType, unit_type:ErmineUnitType) -> List[str]:
         subclass_list = []
         super_class = None
-
-        if data == ErmnDataType.IMAGE:
-            if task == ErmineTaskType.CLASSIFICATION:
-                if unit_type == ErmineUnitType.DATASET
-                    super_class = ImageClassificationDataset.__class__
-                elif unit_type == ErmineUnitType.TRANSFORM:
-                    super_class = .__class__
-                elif unit_type == ErmineUnitType.AUGUMENT:
-                    super_class = .__class__
-                
-
-
-            for sub in subclass_list:
-                print(sub.__module__,sub.__name__)
-        return cls.unit_list
+        return sub
+###        if data == ErmnDataType.IMAGE:
+###            if task == ErmineTaskType.CLASSIFICATION:
+#                if unit_type == ErmineUnitType.DATASET
+#                    super_class = ImageClassificationDataset.__class__
+#                elif unit_type == ErmineUnitType.TRANSFORM:
+#                    super_class = .__class__
+#                elif unit_type == ErmineUnitType.AUGUMENT:
+#                    super_class = .__class__
+#                
+#
+#
+#            for sub in subclass_list:
+#                print(sub.__module__,sub.__name__)
+#        return cls.unit_list
 
     @classmethod
     def __to_json(cls, options: List[OptionInfo])->str:
@@ -86,17 +91,45 @@ class WebService():
     def update_status(cls) -> str:
         pass
     
+    @classmethod
+    def execute_tensorboard(cls):
+        print('execute tensorboard...')
+        cls.process_util.execute_tensorboard()
+
+    @classmethod
+    def kill_tensorboard(cls):
+        print('killing tensorboard...')
+        cls.process_util.kill_tensorboard()
+
+    @classmethod
+    def execute_training(cls):
+        print('execute training')
+        cls.process_util.exec_train()
+
+    @classmethod
+    def kill_training(cls):
+        print('kill training')
+        cls.process_util.kill_training()
+    
+    @classmethod
+    def execute_evaluation(cls):
+        print('execute evaluation')
+        cls.process_util.exec_evaluate()
+
+    @classmethod
+    def kill_evaluation(cls):
+        print('kill evaluation')
+        cls.process_util.kill_evaluation()
+
 
 contents = os.path.dirname(__file__).split(os.path.sep)[0]  + 'bin' + os.path.sep + 'static'
 contents_path = os.path.abspath(contents)
 print(contents_path)
 app = Flask(__name__, static_folder=contents_path, static_url_path='')
 
-
 @app.route('/api/info/<unit>')
 def info(unit):
     return jsonify(WebService.info(unit))
-
 
 @app.route('/api/units')
 def units():
@@ -105,15 +138,56 @@ def units():
     ret['units'] = unit_list
     return jsonify(ret)
 
+@app.route('/api/exec_training')
+def execute_training():
+    WebService.execute_training()
+    return "Execute Training"
 
-@app.route('/api/exec')
-def execute():
-    pass
+@app.route('/api/kill_training')
+def kill_training():
+    WebService.execute_training()
+    return "Kill Training"
+
+@app.route('/api/exec_evaluation')
+def execute_evaluation():
+    WebService.execute_evaluation()
+    return "Execute Evaluation"
+
+@app.route('/api/kill_evaluation')
+def kill_evaluation():
+    WebService.kill_evaluation()
+    return "Kill Evaluation"
+
+@app.route('/api/tensorboard')
+def execute_tensorboard():
+    WebService.execute_tensorboard()
+    return "Execute Tensorboard"
+
+@app.route('/api/kill_tensorboard')
+def kill_tensorboard():
+    WebService.kill_tensorboard()
+    return "Killed Tensorboard"
 
 @app.route('/api/progress')
 def progress():
     return jsonify(WebService.progress())
 
+@app.route('/tensorboard')
+def tensorboard():
+    return redirect("http://localhost:6006", code=302)
+
+
+@app.route('/postfile',methods=['GET', 'POST'])
+def postfile():
+    if request.method == 'POST':
+        data = request.data.decode('utf-8')
+        data = json.loads(data)
+        print(data)
+        return 'OK'
+    else:
+        filepath = request.form['filepath']
+        print(filepath)
+        return 'OK'
 
 def main():
     print('running web server ....')
