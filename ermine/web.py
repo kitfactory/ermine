@@ -100,6 +100,10 @@ class WebService():
     def kill_tensorboard(cls):
         print('killing tensorboard...')
         cls.process_util.kill_tensorboard()
+    
+    @classmethod
+    def is_tensorboard_running(cls):
+        return cls.process_util.is_tensorboard_running()
 
     @classmethod
     def execute_training(cls):
@@ -112,6 +116,11 @@ class WebService():
         cls.process_util.kill_training()
     
     @classmethod
+    def is_training(cls):
+        return cls.process_util.is_training()
+
+
+    @classmethod
     def execute_evaluation(cls):
         print('execute evaluation')
         cls.process_util.exec_evaluate()
@@ -120,7 +129,10 @@ class WebService():
     def kill_evaluation(cls):
         print('kill evaluation')
         cls.process_util.kill_evaluation()
-
+    
+    @classmethod
+    def is_evaluating(cls):
+        return cls.process_util.is_evaluating()
 
 contents = os.path.dirname(__file__).split(os.path.sep)[0]  + 'bin' + os.path.sep + 'static'
 contents_path = os.path.abspath(contents)
@@ -143,9 +155,13 @@ def execute_training():
     WebService.execute_training()
     return "Execute Training"
 
+@app.route('/api/is_training')
+def is_training():
+    return WebService.is_training()
+
 @app.route('/api/kill_training')
 def kill_training():
-    WebService.execute_training()
+    WebService.kill_training()
     return "Kill Training"
 
 @app.route('/api/exec_evaluation')
@@ -158,6 +174,10 @@ def kill_evaluation():
     WebService.kill_evaluation()
     return "Kill Evaluation"
 
+@app.route('/api/is_evaluating')
+def is_evaluating():
+    return WebService.is_evaluating()
+
 @app.route('/api/tensorboard')
 def execute_tensorboard():
     WebService.execute_tensorboard()
@@ -168,6 +188,10 @@ def kill_tensorboard():
     WebService.kill_tensorboard()
     return "Killed Tensorboard"
 
+@app.route('/api/is_tensorbord_running')
+def is_tensorboard_running():
+    return WebService.is_tensorboard_running()
+
 @app.route('/api/progress')
 def progress():
     return jsonify(WebService.progress())
@@ -175,7 +199,6 @@ def progress():
 @app.route('/tensorboard')
 def tensorboard():
     return redirect("http://localhost:6006", code=302)
-
 
 @app.route('/postfile',methods=['GET', 'POST'])
 def postfile():
