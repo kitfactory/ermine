@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker, relationship
 
 Base = declarative_base()
 
-
 class Training(Base):
     __tablename__ = 'training'
     id = Column(Integer, primary_key=True)
@@ -98,5 +97,3 @@ class DatabaseService():
         trainings = self.session.query(Training).filter(Training.name=='aaa')
         for training in trainings:
             print('Found ', training.name)
-
-   

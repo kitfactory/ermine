@@ -110,6 +110,10 @@ class ErmineUnit(metaclass=ABCMeta):
         pass
 
 
+
+
+
+
 class ErmineState():
     NOT_STARTED: int = 0
     EXECUTING: int = 1
@@ -631,5 +635,19 @@ api
 
 * チューニング
     - 
+
+
+
+## データ構造
+* 
+{
+    process:{
+        module {
+            option:uniform(),
+        },
+    },
+}
+
+
 
 '''

@@ -108,9 +108,7 @@ __画像分類タスク__
 たとえば、次のような３種類の画像からなる、データセットを作成してみましょう。
 
 
-
 ### 5.2. 新しいユニットをErmineに追加する
-
 
 node.jsからやること
 
@@ -120,7 +118,48 @@ node.jsからやること
 * 設定ファイルの受信
 
 
+![TFX](https://www.tensorflow.org/tfx/guide/diag_all.svg?hl=ja)
+
+ExampleGen = tf.data.Dataset
+StatisticsGen = tf.data.Dataset / statics
 
 
+```plantuml
+class ErmineUnit
 
 
+class ImageClassificationPipeline
+
+
+class OptunaWorkEngine
+
+```
+* ExampleGen : tf.data.Datasetを作成する。
+* StatisticsGen : tf.data.StaticsGen
+* SchemaGen : dataset->スキーマ情報
+* Transform : tf.data.
+* Evaluator : 
+* ModelValidator : 
+
+---
+* Pusher
+* image CsvClassifyDataset
+
+* jinja2
+* flask
+* bootstrap
+* Global
+* JSON Scheme
+---
+
+
+モジュールのJSON Schemaを取得する。
+
+従属
+
+範囲
+
+正規表現チェック
+"loguniform(0.1-0.5)"
+
+Optunaに設定ファイルを送る。
